@@ -18,8 +18,8 @@ BETA= 0.01
 Q_M= 0.6
 Q_B= 0.8
 
-SPEED= 18
-# T = 0.2;
+CONSTANT_VELOCITY= 18
+TIME_STEP = 0.2
 
 # Communication range 
 R_C = 400
@@ -30,6 +30,6 @@ R_S = 150
 # Max heading angle change
 W_MAX=90
 
-# Distance threshold for s(z,d) function
-D_O = 2 # For obstacle avoidance
+# SAFETY DISTANCE: distance threshold for s(z,d) function
+D_O = 2 # For obstacle avoidance and neighbor avoidance
 D_C = 2 # For decentering term

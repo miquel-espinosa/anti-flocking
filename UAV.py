@@ -13,15 +13,27 @@ class Swarm(object):
     """
     def __init__(self, num, obstacles):
         
-        # Initialize with random positions
-        self.heading_angle = np.zeros(num) # Heading angle of UAVS
+        # Heading angle of UAVS φ
+        self.heading_angle = np.zeros(num) 
+        # Control input for changing heading angle
+        self.control_input = np.zeros(num) 
+        # Coverage map
         self.coverage_map = self.init_coverage_map(num, obstacles)
-        self.vel_o = np.zeros((num,2))
-        self.vel_c = np.zeros((num,2))
-        self.vel_s = np.zeros((num,2))
-        self.vel_b = np.zeros((num,2))
+        # Desired velocity
+        self.vel_desired = np.zeros((num,2))
+        # Obstacle avoidance
+        self.vel_obs = np.zeros((num,2)) 
+        # Decentering
+        self.vel_dec = np.zeros((num,2))
+        # Selfishness
+        self.vel_sel = np.zeros((num,2))
+        # Boundary
+        self.vel_bou = np.zeros((num,2))
         self.neighbors = [[] for i in range(num)]
+        # Initialize with random positions (not inside any obstacle)
         self.pos = self.init_positions(num, self.coverage_map)
+        self.goal = self.pos
+        self.prev_goal = self.pos
 
     # Mark with -1 all cells with obstacle inside
     def init_coverage_map(self, num_uavs, obstacles):
@@ -31,8 +43,13 @@ class Swarm(object):
                 cov_map[row][obs.ld[1]:obs.ru[1]] = -1
         return np.array([cov_map]*num_uavs)
 
+    # TODO: Initial position of drones 
+    #    - Not inside any obstacle
+    #    - Not overlapping sensor range ¿?
+    # Should they all start in the same point?
     def init_positions(self, num, pos):
-        return np.random.rand(num,2)*WIDTH + 1 
+        return np.full((num,2),LENGTH/2) # Init all in the middle?
+        # return np.random.rand(num,2)*WIDTH + 1 
 
 
 
