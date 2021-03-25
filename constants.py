@@ -11,6 +11,7 @@ K_O= 0.8 # obstacle avoidance
 K_C= 0.4 # decentering
 K_S= 0.5 # selfishness
 K_B= 0.1 # boundary control
+K_W= 0.1 # weight for control input update
 
 RHO= 0.2
 ALPHA= 0.04

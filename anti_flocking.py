@@ -1,18 +1,12 @@
+import math
 import numpy as np
-import random as rn
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrow, Circle, Rectangle
-import matplotlib.path as mpath
 import time
-
-
-from func_misc import *
-
 
 from constants import *
 from UAV import *
 from functions import *
-
 
 
 obs1 = Obstacle(ld=[140,290],ru=[640,790])
@@ -32,7 +26,7 @@ plt.ion()
 fig, ax = plt.subplots()
 sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
-    sc[i] = ax.scatter(history_x[i],history_y[i])
+    sc[i] = ax.scatter(history_x[i],history_y[i], s=1)
     
 
 # plt.clf()
@@ -64,7 +58,7 @@ while True:
 
         # Compute neighbors for each uav
         for agent2 in range(agent+1,NUM_UAVS):
-            inter_dist = norm(swarm.pos[agent],swarm.pos[agent2])
+            inter_dist = norm2(swarm.pos[agent],swarm.pos[agent2])
             if inter_dist<R_C:
                 swarm.neighbors[agent].append(agent2)
                 swarm.neighbors[agent2].append(agent)
@@ -99,7 +93,7 @@ while True:
             for y in range(y_0,4*R_S):
 
                 point = np.array((x,y)) # grid cell under consideration in current iteration
-                dist_to_point = norm(swarm.pos[agent],point) # distance agent <--> grid_cell
+                dist_to_point = norm2(swarm.pos[agent],point) # distance agent <--> grid_cell
 
                 # TODO: Should we check if obstacle is inside sensor range? This is given by s(z,d) function
                 # if dist_to_point<R_S:
@@ -122,14 +116,14 @@ while True:
                     # Compute closest neighbor to this point
                     closest = True
                     for neig in swarm.neighbors[agent]:
-                        if norm(point,swarm.pos[neig])<dist_to_point:
+                        if norm2(point,swarm.pos[neig])<dist_to_point:
                             closest = False # If a neighbor is closer than agent (to point x,y)
 
                     if closest: # Compute fitness value for point
                         # ( - I^p_i)
                         time_diff = time.monotonic()-swarm.coverage_map[agent][x][y] 
                         # distance to previous goal
-                        dist_to_prev_goal = norm(np.array([x,y]),swarm.prev_goal[agent])
+                        dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
                         # exponent expression
                         exponent = -ALPHA*dist_to_point-BETA*dist_to_prev_goal
                         # final fitness calculation for point (x,y)
@@ -157,7 +151,7 @@ while True:
             mean = mean/num_neighbors
 
             # Update Decentering velocity for current agent
-            swarm.vel_dec[agent]=s(norm(mean,swarm.pos[agent]),D_C)*unitary_vector(swarm.pos[agent],mean)
+            swarm.vel_dec[agent]=s(norm2(mean,swarm.pos[agent]),D_C)*unitary_vector(swarm.pos[agent],mean)
 
 
         # ===================================================
@@ -178,19 +172,55 @@ while True:
         
         
         # ===================================================
-        #         UPDATE FINAL VELOCITY TERM
+        #         FINAL VELOCITY DIRECTION TERM
         # ===================================================
 
         swarm.vel_desired[agent] = K_O*swarm.vel_obs[agent] + K_C*swarm.vel_dec[agent] + K_S*swarm.vel_sel[agent]
         
 
+        # ===================================================
+        #             COMPUTE DIFFERENCE ANGLE 
+        # ===================================================
+
+        # Actual velocity
+        swarm.vel_actual[agent] = np.array([math.cos(swarm.heading_angle[agent]),math.sin(swarm.heading_angle[agent])])
+
+        # Compute angle between actual velocity and desired velocity terms
+        # Positive or negative sign
+        sign_result = math.copysign(1,np.cross(np.append(swarm.vel_desired[agent],0),np.append(swarm.vel_desired[agent],0))[2])
+        # Intermediate operations
+        divisor = norm1(swarm.vel_desired[agent])*norm1(swarm.vel_actual[agent])
+        dot_product = np.dot(swarm.vel_desired[agent],swarm.vel_actual[agent])
+        # Final computation for agent angle
+        swarm.diff_angle[agent] = math.acos(dot_product/divisor)*sign_result
+
+
+        # ===================================================
+        #                  CONTROL INPUT
+        # ===================================================
+
+        if swarm.heading_angle[agent]>=0:
+            swarm.control_input[agent] = min(W_MAX,K_W*swarm.diff_angle[agent])
+        else:
+            swarm.control_input[agent] = max(-W_MAX,K_W*swarm.diff_angle[agent])
+
+        # ===================================================
+        #         KINEMATIC LAWS - UPDATE POSITION
+        # ===================================================
+
+        # X Position
+        swarm.pos[agent][0] = swarm.pos[agent][0] + CONSTANT_VELOCITY*TIME_STEP*math.cos(swarm.heading_angle[agent])
+
+        # Y Position
+        swarm.pos[agent][1] = swarm.pos[agent][1] + CONSTANT_VELOCITY*TIME_STEP*math.sin(swarm.heading_angle[agent])
+
+        # Heading angle
+        swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
 
 
     # ===================================================
     #                 PLOT GRAPH
     # ===================================================
-    
-
     
 
         # Draw obstacles

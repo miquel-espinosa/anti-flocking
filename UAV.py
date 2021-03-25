@@ -13,26 +13,46 @@ class Swarm(object):
     """
     def __init__(self, num, obstacles):
         
-        # Heading angle of UAVS φ
+        # φ: Heading angle of UAVS
         self.heading_angle = np.zeros(num) 
-        # Control input for changing heading angle
-        self.control_input = np.zeros(num) 
+        
+        # w: Control input for changing heading angle
+        self.control_input = np.zeros(num)
+
+        # θ: Difference angle
+        self.diff_angle = np.zeros(num)
+
         # Coverage map
         self.coverage_map = self.init_coverage_map(num, obstacles)
-        # Desired velocity
+        
+        # Actual velocity direction term
+        self.vel_actual = np.zeros((num,2))
+
+        # Desired velocity direction term
         self.vel_desired = np.zeros((num,2))
-        # Obstacle avoidance
+        
+        # Obstacle avoidance velocity term
         self.vel_obs = np.zeros((num,2)) 
-        # Decentering
+        
+        # Decentering velocity term
         self.vel_dec = np.zeros((num,2))
-        # Selfishness
+        
+        # Selfishness velocity term
         self.vel_sel = np.zeros((num,2))
-        # Boundary
+        
+        # Boundary velocity term
         self.vel_bou = np.zeros((num,2))
+        
+        # Array for storing neighbors indexes
         self.neighbors = [[] for i in range(num)]
+        
         # Initialize with random positions (not inside any obstacle)
         self.pos = self.init_positions(num, self.coverage_map)
+        
+        # (x,y) grid goal
         self.goal = self.pos
+        
+        # (x,y) previous grid goal
         self.prev_goal = self.pos
 
     # Mark with -1 all cells with obstacle inside
