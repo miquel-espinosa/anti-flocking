@@ -17,6 +17,6 @@ def norm2(p1,p2):
 def unitary_vector(p1,p2):
     if (p1==p2).all():
         print("ERROR: p1 and p2 are equal")
-        return p1
+        return np.array([0,0])
     return (p1-p2)/norm2(p1,p2)
 

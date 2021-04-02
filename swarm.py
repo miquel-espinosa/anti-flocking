@@ -35,7 +35,7 @@ class Swarm(object):
         self.vel_obs = np.zeros((num,2)) 
         
         # Decentering velocity term
-        self.vel_dec = np.zeros((num,2))
+        self.vel_dec = np.ones((num,2))
         
         # Selfishness velocity term
         self.vel_sel = np.zeros((num,2))
@@ -55,12 +55,13 @@ class Swarm(object):
         # (x,y) previous grid goal
         self.prev_goal = np.zeros_like(self.pos)
 
-    # Mark with -1 all cells with obstacle inside
+    # Mark with NEG_INF all cells with obstacle inside
     def init_coverage_map(self, num_uavs, obstacles):
         cov_map = np.zeros((WIDTH,LENGTH)) 
         for obs in obstacles:
             for row in range(obs.ld[0],obs.ru[0]):
                 cov_map[row][obs.ld[1]:obs.ru[1]] = NEG_INF
+        print(cov_map)
         return np.array([cov_map]*num_uavs)
 
     # TODO: Initial position of drones 
