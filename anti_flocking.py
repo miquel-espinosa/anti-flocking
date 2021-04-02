@@ -9,10 +9,13 @@ from UAV import *
 from functions import *
 
 
-obs1 = Obstacle(ld=[7,2],ru=[6,7])
+obs1 = Obstacle(ld=[7,2],ru=[8,7])
 obs2 = Obstacle(ld=[2,6],ru=[5,8])
-obstacles = [obs1, obs2]
+# obstacles = [obs1, obs2]
+obstacles = []
+
 START_TIME = time.monotonic()
+# START_TIME = 0
 
 history_x = [[] for i in range(NUM_UAVS)]
 history_y = [[] for i in range(NUM_UAVS)]
@@ -77,8 +80,8 @@ while True:
 
                 # if neighbor is within sensor radius, update obstacle avoidance velocity for both agents
                 if inter_dist<R_S:
-                    swarm.vel_obs[agent] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent],swarm.pos[agent2])
-                    swarm.vel_obs[agent2] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent2],swarm.pos[agent])
+                    swarm.vel_obs[agent] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent2],swarm.pos[agent])
+                    swarm.vel_obs[agent2] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent],swarm.pos[agent2])
 
 
         # ====================================================================================
@@ -86,6 +89,7 @@ while True:
         # ====================================================================================
         # Compute obstacle avoidance term AND update coverage map AND target grid selection
 
+        # BOUDING AREA FOR OBSTACLE SCANNING, COVERAGE UPDATING AND SELECTING CELL GOAL
         # We consider an squared area that is R_S^2
         x0 = int(np.floor(swarm.pos[agent][0]-2*R_S))
         y0 = int(np.floor(swarm.pos[agent][1]-2*R_S))
@@ -94,11 +98,15 @@ while True:
         x_upper = min(x0+4*R_S,WIDTH) 
         y_upper = min(y0+4*R_S,LENGTH)
         
+        # AUX LOCAL VARIABLES
         max_fitness = 0 # Variable for storing the max_fitness
+        best_angle = 180 # Variable for storing the best angle for choosing optimum goal cell
 
+        # Init
         swarm.prev_goal[agent] = swarm.goal[agent] # Save previous goal
         swarm.vel_obs[agent] = np.zeros((1,2)) #Init obstacle velocity
 
+        # Loop over agent square-area surroundings
         for x in range(x0_bounded,x_upper): 
             for y in range(y0_bounded,y_upper):
 
@@ -106,23 +114,28 @@ while True:
                 dist_to_point = norm2(swarm.pos[agent],point) # distance agent <--> grid_cell
 
                 # TODO: Should we check if obstacle is inside sensor range? This is given by s(z,d) function
-                # if dist_to_point<R_S:
 
-                # ---------- OBSTACLE AVOIDANCE ----------
-                # Obstacles are marked with -1 in coverage map
-                if swarm.coverage_map[agent][x][y] == NEG_INF: 
-                    swarm.vel_obs[agent] += s(dist_to_point,D_O) * unitary_vector(swarm.pos[agent],point)
+                # If inside the sensor radius
+                if dist_to_point < R_S: 
+
+                    # ---------- OBSTACLE AVOIDANCE ----------
+                    # Obstacles are marked with NEG_INF in coverage map
+                    # If obstacles are inside sensor radius, repulsion
+                    if swarm.coverage_map[agent][x][y] == NEG_INF: 
+                        swarm.vel_obs[agent] += s(dist_to_point,D_O) * unitary_vector(point,swarm.pos[agent])
                     
-                # ---------- UPDATE COVERAGE MAP ----------
-                # If its not an obstacle and is inside the sensor range, update timestamp
-                elif dist_to_point < R_S: 
-                    swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
-
+                    # If it is not an obstacle, update that cell as already covered
+                    else: 
+                        # ---------- UPDATE COVERAGE MAP ----------
+                        # If inside not an obstacle and is inside the sensor range, update timestamp
+                        swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
+                        # swarm.coverage_map[agent][x][y] = 1
+                        
                 # ---------- TARGET GRID SELECTION ----------
                 # If not an obstacle and not inside radius, compute heuristics
                 # We will perform target grid selection for those cells
                 # that are:  R_S < cells < 2*R_S  
-                else:
+                elif swarm.coverage_map[agent][x][y] != NEG_INF:
                     # Compute closest neighbor to this point
                     closest = True
                     for neig in swarm.neighbors[agent]:
@@ -132,6 +145,7 @@ while True:
                     if closest: # Compute fitness value for point
                         # ( - I^p_i)
                         time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
+                        # time_diff = 1-swarm.coverage_map[agent][x][y] 
                         # distance to previous goal
                         dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
                         # exponent expression
@@ -141,9 +155,24 @@ while True:
                         if fitness > max_fitness:
                             max_fitness = fitness
                             swarm.goal[agent] = point # Update goal with point (x,y)
-                        
-                        # TODO: Avoid oscillation situation --> choose one with better angle
-                        # elif fitness == max_fitness:
+                            # Compute unitary velocity vector to goal
+                            vel_goal=unitary_vector(swarm.pos[agent],point)
+                            # Update best current angle to point to best current goal
+                            best_angle = angle_between(swarm.vel_actual[agent],vel_goal)
+
+                        # In order to avoid oscillation situation: choose the goal with better angle
+                        # We will check with a rounding of two decimal places for the fitnesses values
+                        elif round(fitness,4) == round(max_fitness,4):
+                            # Compute unitary velocity vector to possible goal
+                            vel_goal=unitary_vector(swarm.pos[agent],point)
+                            # Compute angle between actual velocity and possible goal
+                            angle = angle_between(vel_goal,swarm.vel_actual[agent])
+
+                            # Compare angle with best_current_angle
+                            if angle < best_angle:
+                                best_angle = angle
+                                max_fitness = fitness
+                                swarm.goal[agent] = point # Update goal with point (x,y)
 
 
 
@@ -161,7 +190,7 @@ while True:
             mean = mean/(num_neighbors+1)
 
             # Update Decentering velocity for current agent
-            swarm.vel_dec[agent]=s(norm2(mean,swarm.pos[agent]),D_C)*unitary_vector(swarm.pos[agent],mean)
+            swarm.vel_dec[agent]=s(norm2(mean,swarm.pos[agent]),D_C)*unitary_vector(mean,swarm.pos[agent])
 
 
         # ===================================================
@@ -169,7 +198,7 @@ while True:
         # ===================================================
         # Compute selfishness term with goal previously computed
 
-        swarm.vel_sel[agent]=unitary_vector(swarm.goal[agent],swarm.pos[agent])
+        swarm.vel_sel[agent]=unitary_vector(swarm.pos[agent],swarm.goal[agent])
 
 
         # ===================================================
@@ -198,8 +227,8 @@ while True:
         # Actual velocity
         swarm.vel_actual[agent] = np.array([math.cos(math.radians(swarm.heading_angle[agent])),math.sin(math.radians(swarm.heading_angle[agent]))])
 
-        print("VEL DESIRED: ",swarm.vel_desired[agent])
-        print("VEL ACTUAL: ",swarm.vel_actual[agent])
+        # print("VEL DESIRED: ",swarm.vel_desired[agent])
+        # print("VEL ACTUAL: ",swarm.vel_actual[agent])
         
 
         # Compute angle between actual velocity and desired velocity terms
@@ -210,7 +239,7 @@ while True:
         dot_product = np.dot(swarm.vel_desired[agent],swarm.vel_actual[agent])
         # Final computation for agent angle
         swarm.diff_angle[agent] = math.degrees(math.acos(dot_product/divisor)*sign_result)
-        print("DIFF ANGLE:",swarm.diff_angle[agent])
+        # print("DIFF ANGLE:",swarm.diff_angle[agent])
         
 
 
@@ -223,8 +252,8 @@ while True:
         else:
             swarm.control_input[agent] = max(-W_MAX,K_W*swarm.diff_angle[agent])
 
-        print("CONTROL INPUT: ",swarm.control_input[agent])
-        print("------------------------")
+        # print("CONTROL INPUT: ",swarm.control_input[agent])
+        # print("------------------------")
 
         # ===================================================
         #         KINEMATIC LAWS - UPDATE POSITION
@@ -238,7 +267,7 @@ while True:
 
         # Heading angle
         swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
-        print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
+        # print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
 
     # ===================================================
     #                 PLOT GRAPH
@@ -259,8 +288,8 @@ while True:
     print("POS AGENT 1: ",swarm.pos[0])
     # print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
 
-    desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_desired[0][0],swarm.pos[0][1]+swarm.vel_desired[0][1], s=1)
-    # current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1)
+    # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_desired[0][0],swarm.pos[0][1]+swarm.vel_desired[0][1], s=1)
+    current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1)
     
     
     
@@ -269,8 +298,8 @@ while True:
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS 
     fig2.canvas.draw_idle()
     fig.canvas.draw_idle()
-    plt.pause(1)
-    print()
+    plt.pause(0.1)
+    # print()
     # time.sleep(5)
 
 
