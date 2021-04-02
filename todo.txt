@@ -1,0 +1,5 @@
+- problems with obstacles and optimum goal decision (take acount angle from current vel_actual.
+- Add boundaries
+- Obstacles avoidance fix --> not always avoiding
+- Initialization positions of drones
+- Code refactoring
