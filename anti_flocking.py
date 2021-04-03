@@ -2,7 +2,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrow, Circle, Rectangle
-import time
+import time, colorsys
 
 from constants import *
 from UAV import *
@@ -12,10 +12,10 @@ from functions import *
 obs1 = Obstacle(ld=[7,2],ru=[8,7])
 obs2 = Obstacle(ld=[2,6],ru=[5,8])
 # obstacles = [obs1, obs2]
-obstacles = []
+obstacles = [obs1]
 
-START_TIME = time.monotonic()
-# START_TIME = 0
+# START_TIME = time.monotonic()
+START_TIME = 0
 
 history_x = [[] for i in range(NUM_UAVS)]
 history_y = [[] for i in range(NUM_UAVS)]
@@ -52,6 +52,11 @@ for obs in obstacles:
 
 plt.draw()
 
+
+agent_colors=[]
+for c in np.arange(0., 360., 360./NUM_UAVS):
+    (r, g, b) = colorsys.hls_to_rgb(c/360., (50 + np.random.rand() * 10)/100., (90 + np.random.rand() * 10)/100.)
+    agent_colors.append((r, g, b))
 
 
 # MAIN EXECUTION LOOP
@@ -128,8 +133,8 @@ while True:
                     else: 
                         # ---------- UPDATE COVERAGE MAP ----------
                         # If inside not an obstacle and is inside the sensor range, update timestamp
-                        swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
-                        # swarm.coverage_map[agent][x][y] = 1
+                        # swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
+                        swarm.coverage_map[agent][x][y] = 1
                         
                 # ---------- TARGET GRID SELECTION ----------
                 # If not an obstacle and not inside radius, compute heuristics
@@ -144,8 +149,8 @@ while True:
 
                     if closest: # Compute fitness value for point
                         # ( - I^p_i)
-                        time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
-                        # time_diff = 1-swarm.coverage_map[agent][x][y] 
+                        # time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
+                        time_diff = 1-swarm.coverage_map[agent][x][y] 
                         # distance to previous goal
                         dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
                         # exponent expression
@@ -159,10 +164,11 @@ while True:
                             vel_goal=unitary_vector(swarm.pos[agent],point)
                             # Update best current angle to point to best current goal
                             best_angle = angle_between(swarm.vel_actual[agent],vel_goal)
-
+                        
+                        # TODO: It needs to be adjusted correctly
                         # In order to avoid oscillation situation: choose the goal with better angle
                         # We will check with a rounding of two decimal places for the fitnesses values
-                        elif round(fitness,4) == round(max_fitness,4):
+                        elif round(fitness,2) == round(max_fitness,2):
                             # Compute unitary velocity vector to possible goal
                             vel_goal=unitary_vector(swarm.pos[agent],point)
                             # Compute angle between actual velocity and possible goal
@@ -279,25 +285,25 @@ while True:
         # plt.xlabel('x (m)')
         # plt.ylabel('y (m)')
 
-        history_x[agent].append(swarm.pos[agent][0])
-        history_y[agent].append(swarm.pos[agent][1])
+        # history_x[agent].append(swarm.pos[agent][0])
+        # history_y[agent].append(swarm.pos[agent][1])
 
-        sc[agent].set_offsets(np.c_[history_x[agent],history_y[agent]])
+        # sc[agent].set_offsets(np.c_[history_x[agent],history_y[agent]])
+        prueba = ax.scatter(swarm.pos[agent][0],swarm.pos[agent][1], s=1, color=agent_colors[agent])
 
 
-    print("POS AGENT 1: ",swarm.pos[0])
+    # print("POS AGENT 1: ",swarm.pos[0])
     # print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
 
-    # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_desired[0][0],swarm.pos[0][1]+swarm.vel_desired[0][1], s=1)
-    current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1)
+    # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1)
+    # current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1,color="r")
     
-    
-    
-    im = ax2.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 
-    # PLOT CURRENT ITERATION AND AGENTS POSITIONS 
-    fig2.canvas.draw_idle()
-    fig.canvas.draw_idle()
+    im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+
+    # PLOT CURRENT ITERATION AND AGENTS POSITIONS
+    # fig2.canvas.draw_idle()
+    # fig.canvas.draw_idle()
     plt.pause(0.1)
     # print()
     # time.sleep(5)

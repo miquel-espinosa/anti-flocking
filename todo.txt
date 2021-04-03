@@ -3,3 +3,15 @@
 - Obstacles avoidance fix --> not always avoiding
 - Initialization positions of drones
 - Code refactoring
+
+- Fix updating matplotlib efficiency (port to PyGame, or other graphics)
+- Export to image or to animation
+
+IMPORTANT:
+ - Readjustment of fitness function 
+	· Problems with time.monotonic()
+	· Problems with NEG_INF
+	· Problems with oscillation angle situation and rounding() fitness value 
+
+	SOLUTIONS: 
+	  - Make a simpler fitness function with INTEGER values
