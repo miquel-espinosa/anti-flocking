@@ -1,3 +1,5 @@
+import matplotlib.path as mpath
+import matplotlib.patches as mpatches
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,9 +19,9 @@ obstacles = [obs1]
 # START_TIME = time.monotonic()
 START_TIME = 0
 
-history_x = [[] for i in range(NUM_UAVS)]
-history_y = [[] for i in range(NUM_UAVS)]
 swarm = Swarm(NUM_UAVS, obstacles)
+history_x = [[swarm.pos[i][0]] for i in range(NUM_UAVS)]
+history_y = [[swarm.pos[i][1]] for i in range(NUM_UAVS)]
 
  
 
@@ -285,11 +287,21 @@ while True:
         # plt.xlabel('x (m)')
         # plt.ylabel('y (m)')
 
-        # history_x[agent].append(swarm.pos[agent][0])
-        # history_y[agent].append(swarm.pos[agent][1])
+        history_x[agent].append(swarm.pos[agent][0])
+        history_y[agent].append(swarm.pos[agent][1])
 
         # sc[agent].set_offsets(np.c_[history_x[agent],history_y[agent]])
-        prueba = ax.scatter(swarm.pos[agent][0],swarm.pos[agent][1], s=1, color=agent_colors[agent])
+        # prueba = ax.scatter(swarm.pos[agent][0],swarm.pos[agent][1], s=1, color=agent_colors[agent])
+        string_path_data = [
+            (mpath.Path.MOVETO, (history_x[agent][-2],history_y[agent][-2])),
+            (mpath.Path.CURVE3, (history_x[agent][-2],history_y[agent][-2])),
+            (mpath.Path.CURVE3, (history_x[agent][-1],history_y[agent][-1]))]
+
+        codes, verts = zip(*string_path_data)
+        string_path = mpath.Path(verts, codes)
+        patch = mpatches.PathPatch(string_path, facecolor="none", color=agent_colors[agent], lw=2)
+
+        ax.add_patch(patch)
 
 
     # print("POS AGENT 1: ",swarm.pos[0])
@@ -298,6 +310,8 @@ while True:
     # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1)
     # current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1,color="r")
     
+    
+
 
     im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 

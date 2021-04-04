@@ -4,7 +4,7 @@
 
 LENGTH=20
 WIDTH=20
-NUM_UAVS=1
+NUM_UAVS=2
 
 # TODO: Needs to be tweaked
 # Weights for velocity parameters
