@@ -9,7 +9,7 @@ from UAV import *
 from functions import *
 
 
-obs1 = Obstacle(ld=[7,2],ru=[8,7])
+obs1 = Obstacle(ld=[2,2],ru=[8,7])
 obs2 = Obstacle(ld=[2,6],ru=[5,8])
 # obstacles = [obs1, obs2]
 obstacles = [obs1]
@@ -32,7 +32,7 @@ fig2, ax2 = plt.subplots()
 im = ax2.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 fig2.colorbar(im)
 
-plt.ion()
+# plt.ion()
 fig, ax = plt.subplots()
 sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
@@ -302,7 +302,7 @@ while True:
     im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    # fig2.canvas.draw_idle()
+    fig2.canvas.draw_idle()
     # fig.canvas.draw_idle()
     plt.pause(0.1)
     # print()

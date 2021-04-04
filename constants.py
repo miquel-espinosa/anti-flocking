@@ -6,6 +6,7 @@ LENGTH=20
 WIDTH=20
 NUM_UAVS=1
 
+# TODO: Needs to be tweaked
 # Weights for velocity parameters
 # K_O= 0.8 # obstacle avoidance ORIGINAL
 K_O= 0.7 # obstacle avoidance
@@ -38,4 +39,4 @@ D_C = 4 # For decentering term
 
 # TODO: It needs to be adjusted correctly
 # Negative infinite for marking obstacles in coverage map
-NEG_INF = -1000
+NEG_INF = -2
