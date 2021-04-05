@@ -7,7 +7,7 @@ from matplotlib.patches import FancyArrow, Circle, Rectangle
 import time, colorsys
 
 from constants import *
-from UAV import *
+from Swarm import *
 from functions import *
 
 
@@ -30,15 +30,20 @@ history_y = [[swarm.pos[i][1]] for i in range(NUM_UAVS)]
 #              PLOTTING GRAPH AND OBSTACLES
 # ======================================================
 
-fig2, ax2 = plt.subplots()
-im = ax2.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-fig2.colorbar(im)
-
-# plt.ion()
+# Drone simulation
 fig, ax = plt.subplots()
 sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
     sc[i] = ax.scatter(history_x[i],history_y[i], s=1)
+
+# Coverage percentage map
+fig, ax = plt.subplots()
+
+
+# Coverage temperature map
+fig2, ax2 = plt.subplots()
+im = ax2.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+fig2.colorbar(im)
     
 # plt.clf()
 plt.xlim(-10, WIDTH+10)    # set the xlim to xmin, xmax
@@ -313,14 +318,12 @@ while True:
     
 
 
-    im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+    # im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    fig2.canvas.draw_idle()
+    # fig2.canvas.draw_idle()
     # fig.canvas.draw_idle()
     plt.pause(0.1)
-    # print()
-    # time.sleep(5)
 
 
 plt.waitforbuttonpress()
