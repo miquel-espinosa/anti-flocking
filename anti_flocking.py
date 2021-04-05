@@ -10,6 +10,9 @@ from constants import *
 from Swarm import *
 from functions import *
 
+# DEBUGGING
+debug = False
+
 
 obs1 = Obstacle(ld=[2,2],ru=[8,7])
 obs2 = Obstacle(ld=[2,6],ru=[5,8])
@@ -70,7 +73,7 @@ for c in np.arange(0., 360., 360./NUM_UAVS):
 iter = 0
 
 # MAIN EXECUTION LOOP
-while True:
+while swarm.coverage_percentage<100:
     iter = iter + 1
 
     # MAIN LOOP 2
@@ -244,8 +247,8 @@ while True:
         # Actual velocity
         swarm.vel_actual[agent] = np.array([math.cos(math.radians(swarm.heading_angle[agent])),math.sin(math.radians(swarm.heading_angle[agent]))])
 
-        # print("VEL DESIRED: ",swarm.vel_desired[agent])
-        # print("VEL ACTUAL: ",swarm.vel_actual[agent])
+        if debug: print("VEL DESIRED: ",swarm.vel_desired[agent])
+        if debug: print("VEL ACTUAL: ",swarm.vel_actual[agent])
         
 
         # Compute angle between actual velocity and desired velocity terms
@@ -256,7 +259,7 @@ while True:
         dot_product = np.dot(swarm.vel_desired[agent],swarm.vel_actual[agent])
         # Final computation for agent angle
         swarm.diff_angle[agent] = math.degrees(math.acos(dot_product/divisor)*sign_result)
-        # print("DIFF ANGLE:",swarm.diff_angle[agent])
+        if debug: print("DIFF ANGLE:",swarm.diff_angle[agent])
         
 
 
@@ -269,8 +272,7 @@ while True:
         else:
             swarm.control_input[agent] = max(-W_MAX,K_W*swarm.diff_angle[agent])
 
-        # print("CONTROL INPUT: ",swarm.control_input[agent])
-        # print("------------------------")
+        if debug: print("CONTROL INPUT: ",swarm.control_input[agent])
 
         # ===================================================
         #         KINEMATIC LAWS - UPDATE POSITION
@@ -284,7 +286,7 @@ while True:
 
         # Heading angle
         swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
-        # print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
+        if debug: print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
 
 
     # ===================================================
@@ -313,9 +315,13 @@ while True:
 
         ax_trajectories.add_patch(patch)
 
+        if debug: print("------------------------")
 
-    # print("POS AGENT 1: ",swarm.pos[0])
-    # print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
+        # ============================ END OF AGENT ITERATION ===============================
+
+
+    if debug: print("POS AGENT 1: ",swarm.pos[0])
+    if debug: print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
 
     # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1)
     # current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1,color="r")
@@ -326,7 +332,7 @@ while True:
     aux_max = np.maximum(*swarm.coverage_map)
     swarm.coverage_percentage = (np.count_nonzero(aux_max)/area)*100 
     history_percentage.append(swarm.coverage_percentage)
-    print("COVERAGE: ",swarm.coverage_percentage,"%")
+    if debug: print("COVERAGE: ",swarm.coverage_percentage,"%")
 
     # PLOT COVERAGE PERCENTAGE GRAPH
     string_percentage = [
@@ -341,7 +347,7 @@ while True:
     ax_cov_graph.set_xlim(max(0,length-200),max(length,200))
     ax_cov_graph.add_patch(patch_line)
 
-
+    # PLOT AREA COVERAGE TEMPERATURE MAP
     # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
@@ -352,12 +358,3 @@ while True:
 
 
 plt.waitforbuttonpress()
-
-
-
-
- 
-# Calculating the output and storing it in the array Z
-
- 
-
