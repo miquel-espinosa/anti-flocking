@@ -1,6 +1,6 @@
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-import math
+import math, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrow, Circle, Rectangle
@@ -47,7 +47,7 @@ for i in range(NUM_UAVS):
 
 ax_trajectories.set_xlim(-10, WIDTH+10)   
 ax_trajectories.set_ylim(-10, LENGTH+10)  
-
+ax_trajectories.set_aspect('equal', adjustable='box')
 
 # Coverage percentage map
 fig_cov_graph, ax_cov_graph = plt.subplots()
@@ -314,6 +314,9 @@ while swarm.coverage_percentage<100:
         patch = mpatches.PathPatch(string_path, facecolor="none", color=agent_colors[agent], lw=2)
 
         ax_trajectories.add_patch(patch)
+        ax_trajectories.add_patch(Circle(swarm.pos[agent],R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
+        ax_trajectories.add_patch(Circle(swarm.pos[agent],R_C,edgecolor="lavender",fill=False,linestyle="--"))
+
 
         if debug: print("------------------------")
 
@@ -356,5 +359,6 @@ while swarm.coverage_percentage<100:
     fig_trajectories.canvas.draw_idle()
     plt.pause(0.1)
 
+    
 
 plt.waitforbuttonpress()

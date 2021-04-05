@@ -2,8 +2,8 @@
     Constants are defined here
 """
 
-LENGTH=20
-WIDTH=20
+LENGTH=80
+WIDTH=80
 NUM_UAVS=2
 
 # TODO: Needs to be tweaked
@@ -21,14 +21,14 @@ BETA= 0.01
 Q_M= 0.6
 Q_B= 0.8
 
-CONSTANT_VELOCITY= 5
+CONSTANT_VELOCITY= 3
 TIME_STEP = 0.2
 
 # Communication range 
-R_C = 4
+R_C = 10
 
 # Sensor-perception range 
-R_S = 2
+R_S = 4
 
 # Max heading angle change
 W_MAX=45
