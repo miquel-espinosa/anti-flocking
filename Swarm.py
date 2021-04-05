@@ -55,6 +55,8 @@ class Swarm(object):
         # (x,y) previous grid goal
         self.prev_goal = np.zeros_like(self.pos)
 
+        self.coverage_percentage = 0
+
     # Mark with -1 all cells with obstacle inside
     def init_coverage_map(self, num_uavs, obstacles):
         cov_map = np.zeros((WIDTH,LENGTH)) 

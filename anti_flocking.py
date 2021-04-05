@@ -22,7 +22,7 @@ START_TIME = 0
 swarm = Swarm(NUM_UAVS, obstacles)
 history_x = [[swarm.pos[i][0]] for i in range(NUM_UAVS)]
 history_y = [[swarm.pos[i][1]] for i in range(NUM_UAVS)]
-
+history_percentage = [0]
  
 
 
@@ -30,34 +30,35 @@ history_y = [[swarm.pos[i][1]] for i in range(NUM_UAVS)]
 #              PLOTTING GRAPH AND OBSTACLES
 # ======================================================
 
+# Coverage temperature map
+fig_cov_temp, ax_cov_temp = plt.subplots()
+im = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+fig_cov_temp.colorbar(im)
+
+
 # Drone simulation
-fig, ax = plt.subplots()
+fig_trajectories, ax_trajectories = plt.subplots()
 sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
-    sc[i] = ax.scatter(history_x[i],history_y[i], s=1)
+    sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
+
+ax_trajectories.set_xlim(-10, WIDTH+10)   
+ax_trajectories.set_ylim(-10, LENGTH+10)  
+
 
 # Coverage percentage map
-fig, ax = plt.subplots()
-
-
-# Coverage temperature map
-fig2, ax2 = plt.subplots()
-im = ax2.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-fig2.colorbar(im)
+fig_cov_graph, ax_cov_graph = plt.subplots()
+ax_cov_graph.set_xlim(0,200)   
+ax_cov_graph.set_ylim(0,100)   
     
-# plt.clf()
-plt.xlim(-10, WIDTH+10)    # set the xlim to xmin, xmax
-plt.ylim(-10, LENGTH+10)    # set the xlim to xmin, xmax
-plt.gca().set_aspect('equal', adjustable='box')
+
 
 for obs in obstacles:
     width = obs.ru[0]-obs.ld[0]
     height = obs.ru[1]-obs.ld[1]
     rect = Rectangle((obs.ld[0], obs.ld[1]), width, height, linewidth=1, edgecolor='r', facecolor='none')
     # Add the patch to the Axes
-    ax.add_patch(rect)
-
-plt.draw()
+    ax_trajectories.add_patch(rect)
 
 
 agent_colors=[]
@@ -66,8 +67,11 @@ for c in np.arange(0., 360., 360./NUM_UAVS):
     agent_colors.append((r, g, b))
 
 
+iter = 0
+
 # MAIN EXECUTION LOOP
 while True:
+    iter = iter + 1
 
     # MAIN LOOP 2
     for agent in range(NUM_UAVS):
@@ -282,6 +286,7 @@ while True:
         swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
         # print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
 
+
     # ===================================================
     #                 PLOT GRAPH
     # ===================================================
@@ -306,7 +311,7 @@ while True:
         string_path = mpath.Path(verts, codes)
         patch = mpatches.PathPatch(string_path, facecolor="none", color=agent_colors[agent], lw=2)
 
-        ax.add_patch(patch)
+        ax_trajectories.add_patch(patch)
 
 
     # print("POS AGENT 1: ",swarm.pos[0])
@@ -315,14 +320,34 @@ while True:
     # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1)
     # current_goal = ax.scatter(swarm.goal[0][0],swarm.goal[0][1], s=1,color="r")
     
-    
+
+    # COMPUTE OVERALL COVERAGE PERCENTAGE 
+    area = WIDTH * LENGTH
+    aux_max = np.maximum(*swarm.coverage_map)
+    swarm.coverage_percentage = (np.count_nonzero(aux_max)/area)*100 
+    history_percentage.append(swarm.coverage_percentage)
+    print("COVERAGE: ",swarm.coverage_percentage,"%")
+
+    # PLOT COVERAGE PERCENTAGE GRAPH
+    string_percentage = [
+        (mpath.Path.MOVETO, (iter-1,history_percentage[-2])),
+        (mpath.Path.CURVE3, (iter-1,history_percentage[-2])),
+        (mpath.Path.CURVE3, (iter,history_percentage[-1]))]
+
+    cod, ver = zip(*string_percentage)
+    line = mpath.Path(ver, cod)
+    patch_line = mpatches.PathPatch(line, facecolor="none", color="b", lw=2)
+    length = len(history_percentage)
+    ax_cov_graph.set_xlim(max(0,length-200),max(length,200))
+    ax_cov_graph.add_patch(patch_line)
 
 
-    # im = ax2.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+    # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    # fig2.canvas.draw_idle()
-    # fig.canvas.draw_idle()
+    fig_cov_graph.canvas.draw_idle()
+    # fig_cov_temp.canvas.draw_idle()
+    fig_trajectories.canvas.draw_idle()
     plt.pause(0.1)
 
 
