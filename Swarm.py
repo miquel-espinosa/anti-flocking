@@ -71,7 +71,8 @@ class Swarm(object):
     # Should they all start in the same point?
     def init_positions(self, num, pos):
         # return np.random.rand(num,2)*(LENGTH/2)
-        return np.full((num,2),LENGTH/2) # Init all in the middle?
+        # Init all in the middle?
+        return np.full((num,2),LENGTH/2) 
         # return np.random.rand(num,2)*WIDTH + 1 
 
 

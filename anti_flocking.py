@@ -14,10 +14,9 @@ from functions import *
 debug = False
 
 
-obs1 = Obstacle(ld=[2,2],ru=[8,7])
-obs2 = Obstacle(ld=[2,6],ru=[5,8])
-# obstacles = [obs1, obs2]
-obstacles = [obs1]
+obs1 = Obstacle(ld=[4,4],ru=[18,17])
+obs2 = Obstacle(ld=[32,36],ru=[45,48])
+obstacles = [obs1, obs2]
 
 START_TIME = time.monotonic()
 # START_TIME = 0
@@ -45,10 +44,10 @@ sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
     sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
 
-# boundary = Rectangle((0,0), WIDTH, LENGTH, linewidth=1, edgecolor='black', facecolor="lightgrey")
-# geo_fence = Rectangle((GEO_FENCE_WIDTH,GEO_FENCE_WIDTH), WIDTH-2*GEO_FENCE_WIDTH, LENGTH-2*GEO_FENCE_WIDTH, linewidth=0.5, edgecolor='grey', facecolor="White")
-# ax_trajectories.add_patch(boundary)
-# ax_trajectories.add_patch(geo_fence)
+boundary = Rectangle((0,0), WIDTH, LENGTH, linewidth=1, edgecolor='black', facecolor="lightgrey")
+geo_fence = Rectangle((GEO_FENCE_WIDTH,GEO_FENCE_WIDTH), WIDTH-2*GEO_FENCE_WIDTH, LENGTH-2*GEO_FENCE_WIDTH, linewidth=0.5, edgecolor='grey', facecolor="White")
+ax_trajectories.add_patch(boundary)
+ax_trajectories.add_patch(geo_fence)
 
 ax_trajectories.set_xlim(-10, WIDTH+10)   
 ax_trajectories.set_ylim(-10, LENGTH+10)  
@@ -78,12 +77,12 @@ for c in np.arange(0., 360., 360./NUM_UAVS):
 iter = 0
 
 # MAIN EXECUTION LOOP
-while swarm.coverage_percentage<100:
+while swarm.coverage_percentage<99: # 99% coverage
     iter = iter + 1
 
     # Print current coverage status
-    # if iter % 10 == 0:
-        # print("Coverage: ",swarm.coverage_percentage,"%")
+    if iter % 10 == 0:
+        print("Coverage: ",swarm.coverage_percentage,"%")
 
     # MAIN LOOP 2
     for agent in range(NUM_UAVS):
@@ -161,7 +160,9 @@ while swarm.coverage_percentage<100:
                     # Obstacles are marked with NEG_INF in coverage map
                     # If obstacles are inside sensor radius, repulsion
                     if swarm.coverage_map[agent][x][y] == NEG_INF: 
-                        swarm.vel_obs[agent] += s(dist_to_point,D_O) * unitary_vector(point,swarm.pos[agent])
+                        # TODO: This is a temporary fix for controlling obstacle repulsion
+                        scale_down_factor=0.5
+                        swarm.vel_obs[agent] += (s(dist_to_point,D_O) * unitary_vector(point,swarm.pos[agent]))*scale_down_factor
                     
                     # If it is not an obstacle, update that cell as already covered
                     else: 
@@ -211,7 +212,7 @@ while swarm.coverage_percentage<100:
 
                         # elif (fitness == max_fitness) and (fitness != 0):
                         # elif fitness == max_fitness:
-                        elif round(fitness,2) == round(max_fitness,2):
+                        elif abs(max_fitness-fitness)<0.005:
                             # print("HEHEHEHEHE",iter)
                             # print(fitness-max_fitness)
                             # Compute unitary velocity vector to possible goal
@@ -352,7 +353,7 @@ while swarm.coverage_percentage<100:
 
         if debug: print("------------------------")
 
-        # ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent])
+        # ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent], zorder=2)
         
         # ============================ END OF AGENT ITERATION ===============================
 
@@ -360,7 +361,7 @@ while swarm.coverage_percentage<100:
     if debug: print("POS AGENT 1: ",swarm.pos[0])
     if debug: print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
 
-    # desired_vel = ax.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1)
+    # desired_vel = ax_trajectories.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1, zorder=2)
     
 
     # COMPUTE OVERALL COVERAGE PERCENTAGE 
