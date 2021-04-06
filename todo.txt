@@ -1,17 +1,21 @@
-- problems with obstacles and optimum goal decision (take acount angle from current vel_actual.
 - Add boundaries
-- Obstacles avoidance fix --> not always avoiding
 - Initialization positions of drones
 - Code refactoring
 
-- Fix updating matplotlib efficiency (port to PyGame, or other graphics)
+TO DECIDE:
+- Use time.monotonic() or use simple_coverage
+- Which final values for constants
+- Area scanning:
+   · Whole coverage area? --> efficiency problems
+   · Only specified radius search?
+ 	Default:
+		- Default goal to center?
+		- 
+
+EXTRAS:
 - Export to image or to animation
+- Fix updating matplotlib efficiency (port to PyGame, or other graphics)
 
-IMPORTANT:
- - Readjustment of fitness function 
-	· Problems with time.monotonic()
-	· Problems with NEG_INF
-	· Problems with oscillation angle situation and rounding() fitness value 
 
-	SOLUTIONS: 
-	  - Make a simpler fitness function with INTEGER values
+QUESTIONS: 
+  1.- Una unica cobertura o tiene cubrir la parte más antigua ? 

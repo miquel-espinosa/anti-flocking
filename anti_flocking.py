@@ -19,8 +19,8 @@ obs2 = Obstacle(ld=[2,6],ru=[5,8])
 # obstacles = [obs1, obs2]
 obstacles = [obs1]
 
-# START_TIME = time.monotonic()
-START_TIME = 0
+START_TIME = time.monotonic()
+# START_TIME = 0
 
 swarm = Swarm(NUM_UAVS, obstacles)
 history_x = [[swarm.pos[i][0]] for i in range(NUM_UAVS)]
@@ -35,15 +35,20 @@ history_percentage = [0]
 
 # Coverage temperature map
 fig_cov_temp, ax_cov_temp = plt.subplots()
-im = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-fig_cov_temp.colorbar(im)
+image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+fig_cov_temp.colorbar(image_cov_temp)
 
 
-# Drone simulation
+# Drone simulation map
 fig_trajectories, ax_trajectories = plt.subplots()
 sc = [[] for i in range(NUM_UAVS)]
 for i in range(NUM_UAVS):
     sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
+
+# boundary = Rectangle((0,0), WIDTH, LENGTH, linewidth=1, edgecolor='black', facecolor="lightgrey")
+# geo_fence = Rectangle((GEO_FENCE_WIDTH,GEO_FENCE_WIDTH), WIDTH-2*GEO_FENCE_WIDTH, LENGTH-2*GEO_FENCE_WIDTH, linewidth=0.5, edgecolor='grey', facecolor="White")
+# ax_trajectories.add_patch(boundary)
+# ax_trajectories.add_patch(geo_fence)
 
 ax_trajectories.set_xlim(-10, WIDTH+10)   
 ax_trajectories.set_ylim(-10, LENGTH+10)  
@@ -55,13 +60,13 @@ static_percentage_graph = False
 ax_cov_graph.set_ylim(0,100)   
 
 
-
 for obs in obstacles:
     width = obs.ru[0]-obs.ld[0]
     height = obs.ru[1]-obs.ld[1]
     rect = Rectangle((obs.ld[0], obs.ld[1]), width, height, linewidth=1, edgecolor='black', hatch="////", facecolor="lightgrey")
     # Add the patch to the Axes
     ax_trajectories.add_patch(rect)
+    
 
 
 agent_colors=[]
@@ -77,8 +82,8 @@ while swarm.coverage_percentage<100:
     iter = iter + 1
 
     # Print current coverage status
-    if iter % 10 == 0:
-        print("Coverage: ",swarm.coverage_percentage,"%")
+    # if iter % 10 == 0:
+        # print("Coverage: ",swarm.coverage_percentage,"%")
 
     # MAIN LOOP 2
     for agent in range(NUM_UAVS):
@@ -91,7 +96,7 @@ while swarm.coverage_percentage<100:
         # Init obstacle velocity
         swarm.vel_obs[agent] = np.zeros((1,2)) 
         # Set default goal to go to center of area --> only happens when everything is covered
-        swarm.goal[agent] = np.array([LENGTH/2,WIDTH/2])
+        # swarm.goal[agent] = np.array([LENGTH/2,WIDTH/2])
         # Initialization of neighbors
         swarm.neighbors = [[] for i in range(NUM_UAVS)]
 
@@ -139,6 +144,10 @@ while swarm.coverage_percentage<100:
         # Loop over agent square-area surroundings
         for x in range(x0_bounded,x_upper): 
             for y in range(y0_bounded,y_upper):
+        
+        # Loop over entire coverage area
+        # for x in range(0,WIDTH): 
+        #     for y in range(0,LENGTH):
 
                 point = np.array((x,y)) # grid cell under consideration in current iteration
                 dist_to_point = norm2(swarm.pos[agent],point) # distance agent <--> grid_cell
@@ -158,14 +167,15 @@ while swarm.coverage_percentage<100:
                     else: 
                         # ---------- UPDATE COVERAGE MAP ----------
                         # If inside not an obstacle and is inside the sensor range, update timestamp
-                        # swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
-                        swarm.coverage_map[agent][x][y] = 1
+                        swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
+                        # swarm.coverage_map[agent][x][y] = 1
+                        # image_cov_temp.set_data((x,y))
                         
                 # ---------- TARGET GRID SELECTION ----------
                 # If not an obstacle and not inside radius, compute heuristics
                 # We will perform target grid selection for those cells
                 # that are:  R_S < cells < 2*R_S  
-                elif swarm.coverage_map[agent][x][y] != NEG_INF:
+                elif (swarm.coverage_map[agent][x][y] != NEG_INF) and (not outside_area(x,y)):
                     # Compute closest neighbor to this point
                     closest = True
                     for neig in swarm.neighbors[agent]:
@@ -174,18 +184,18 @@ while swarm.coverage_percentage<100:
 
                     if closest: # Compute fitness value for point
                         # ( - I^p_i)
-                        # time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
+                        time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
                         # time_diff = 1-swarm.coverage_map[agent][x][y] 
                         # distance to previous goal
-                        # dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
+                        dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
                         # exponent expression
-                        # exponent = -ALPHA*dist_to_point-BETA*dist_to_prev_goal
+                        exponent = -ALPHA*dist_to_point-BETA*dist_to_prev_goal
                         # final fitness calculation for point (x,y)
-                        # fitness = time_diff*(RHO+(1-RHO)*math.exp(exponent))
+                        fitness = time_diff*(RHO+(1-RHO)*math.exp(exponent))
                         
                         """ Value 1: Not covered
                             Value 0: Already covered"""
-                        fitness = 1-swarm.coverage_map[agent][x][y]
+                        # fitness = 1-swarm.coverage_map[agent][x][y]
 
                         if fitness > max_fitness:
                             max_fitness = fitness
@@ -198,7 +208,12 @@ while swarm.coverage_percentage<100:
                         # TODO: It needs to be adjusted correctly
                         # In order to avoid oscillation situation: choose the goal with better angle
                         # We will check with a rounding of two decimal places for the fitnesses values
-                        elif (fitness == max_fitness) and (fitness != 0):
+
+                        # elif (fitness == max_fitness) and (fitness != 0):
+                        # elif fitness == max_fitness:
+                        elif round(fitness,2) == round(max_fitness,2):
+                            # print("HEHEHEHEHE",iter)
+                            # print(fitness-max_fitness)
                             # Compute unitary velocity vector to possible goal
                             vel_goal=unitary_vector(swarm.pos[agent],point)
                             # Compute angle between actual velocity and possible goal
@@ -241,7 +256,9 @@ while swarm.coverage_percentage<100:
         #                 BOUNDARY REPULSTION TERM
         # ===================================================
 
-
+        if outside_area(*swarm.pos[agent]):
+            p_m = np.array((WIDTH/2,LENGTH/2))
+            swarm.vel_bou[agent] = Q_M*unitary_vector(swarm.pos[agent],p_m) 
 
         
         
@@ -251,8 +268,9 @@ while swarm.coverage_percentage<100:
         # ===================================================
 
         swarm.vel_desired[agent] = K_O*swarm.vel_obs[agent] \
-            + K_C*swarm.vel_dec[agent] \
-            + K_S*swarm.vel_sel[agent]
+                                + K_C*swarm.vel_dec[agent] \
+                                + K_S*swarm.vel_sel[agent] \
+                                + K_B*swarm.vel_bou[agent]
         
         
 
@@ -327,7 +345,6 @@ while swarm.coverage_percentage<100:
         patch = mpatches.PathPatch(string_path, color=agent_colors[agent], lw=2)
 
         ax_trajectories.add_patch(patch)
-
         # Add circles
         # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
         # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_C,edgecolor="lavender",fill=False,linestyle="--"))
@@ -335,7 +352,8 @@ while swarm.coverage_percentage<100:
 
         if debug: print("------------------------")
 
-        current_goal = ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent])
+        # ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent])
+        
         # ============================ END OF AGENT ITERATION ===============================
 
 
@@ -374,10 +392,11 @@ while swarm.coverage_percentage<100:
 
     # PLOT AREA COVERAGE TEMPERATURE MAP
     # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+    
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    fig_cov_graph.canvas.draw_idle()
     # fig_cov_temp.canvas.draw_idle()
+    fig_cov_graph.canvas.draw_idle()
     fig_trajectories.canvas.draw_idle()
     plt.pause(0.1)
 
@@ -385,7 +404,7 @@ while swarm.coverage_percentage<100:
 
 print()
 print(" ============ AREA COVERAGE MISSION COMPLETED ============")
-print("       Total time elapsed: ", )
+print("       Total time elapsed: ",round(time.monotonic()-START_TIME,2)," seconds" )
 print("       Number of total iterations: ", iter)
 print("       Final coverage area: ",swarm.coverage_percentage,"%")
 print(" =========================================================")

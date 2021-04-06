@@ -1,3 +1,4 @@
+from constants import GEO_FENCE_WIDTH, LENGTH, WIDTH
 import math
 import numpy as np
 
@@ -19,7 +20,7 @@ def norm2(p1,p2):
 def unitary_vector(p1,p2):
     """ Results in a unitary vector going from p1 to p2  [p1 --> p2] """
     if (p1==p2).all():
-        print("ERROR: p1 and p2 are equal")
+        # print("ERROR: p1 and p2 are equal")
         # return a random velocity for each
         return np.random.uniform(low=-1,high=1, size=(2,))
     return (p2-p1)/norm2(p1,p2)
@@ -36,3 +37,10 @@ def angle_between(vec1,vec2):
     
     # Final computation for angle between vectors
     return math.degrees(math.acos(value))
+
+def outside_area(x,y):
+    """ Function to check if point is outiside the permitted area """
+    if (x<GEO_FENCE_WIDTH) or (y<GEO_FENCE_WIDTH) or \
+        (x>LENGTH-GEO_FENCE_WIDTH) or (y>WIDTH-GEO_FENCE_WIDTH):
+        return True
+    return False
