@@ -2,9 +2,9 @@
     Constants are defined here
 """
 
-LENGTH=80
-WIDTH=80
-NUM_UAVS=2
+LENGTH=40
+WIDTH=40
+NUM_UAVS=3
 
 # TODO: Needs to be tweaked
 # Weights for velocity parameters
