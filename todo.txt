@@ -3,7 +3,7 @@
 - Code refactoring
 
 TO DECIDE:
-- Use time.monotonic() or use simple_coverage
+
 - Which final values for constants
 - Area scanning:
    · Whole coverage area? --> efficiency problems
@@ -18,4 +18,30 @@ EXTRAS:
 
 
 QUESTIONS: 
-  1.- Una unica cobertura o tiene cubrir la parte más antigua ? 
+  
+  1.- PROBLEMA DE COVERTURA UNICA? -> Una unica cobertura o tiene cubrir la parte más antigua ? 
+	
+	- Use time.monotonic() or use simple_coverage
+	       (surveillance)          (agricultural)
+
+  2.- TARGET GRID SELECTION -> Iterar sobre el mapa entero o solo sobre un radio (2*R_S) ?
+
+
+
+
+NEXT STEPS:
+ - Acabar de perfilar bien el código y ver algunos bugs que todavía hay.
+    - Ej. Los agentes se juntan demasiado aun cuando hay mucho espacio por cubrir todavía.
+
+ - Rethink fitness function for surveillance !!! --> más prioridad a las zonas no cubiertas todavía (mmm, quiza inicializar con número grande negativo ¿-infinito?) --> obstacles = 0 mmm think about this
+
+ - Obstacle definition in external file
+
+ - Investigar la posibilidad de crear una interfaz gráfica
+
+ - REPORT:
+   - Documentar primeros pasos
+   - Explicar código, algoritmo, estructura + empezar a mostrar los resultados obtenidos, con los tiempos, etc.
+
+   - Incluir imagenes para parte de State of the Art
+   - Acabar de completar parte de Metaheuristicas de State of the Art

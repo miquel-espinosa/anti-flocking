@@ -2,10 +2,17 @@
     Constants are defined here
 """
 
+"""
+    COVERAGE MODE
+      unique: Unique coverage (no time consideration)
+      continuous: Surveillance coverage (time consideration)
+"""
+MODE = "continuous"
+
 LENGTH=50
 WIDTH=50
-GEO_FENCE_WIDTH=3
-NUM_UAVS=4
+GEO_FENCE_WIDTH=2
+NUM_UAVS=2
 
 # TODO: Needs to be tweaked
 # Weights for velocity parameters
@@ -34,10 +41,11 @@ R_S = 5
 W_MAX=45
 
 # SAFETY DISTANCE: distance threshold for s(z,d) function
-D_O = 5 # For obstacle avoidance --> emergency situation
+D_O = R_S # For obstacle avoidance --> emergency situation
+D_N = 2 # For neighbor avoidance --> emergency situation
 # Decentering value should take approximately 2*R_S (twice the sensor range)
-D_C = 9 # For decentering term --> neighbor avoidance
+D_C = 2*R_S # For decentering term --> neighbor avoidance threshold
 
 # TODO: It needs to be adjusted correctly
 # Negative infinite for marking obstacles in coverage map
-NEG_INF = -10
+NEG_INF = -40

@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 def s(z,d):
-    if z<0:
+    if z<0 or z>d:
         return 0
     else:
         return 1+math.cos((math.pi*(z+d))/(2*d))
@@ -20,7 +20,7 @@ def norm2(p1,p2):
 def unitary_vector(p1,p2):
     """ Results in a unitary vector going from p1 to p2  [p1 --> p2] """
     if (p1==p2).all():
-        # print("ERROR: p1 and p2 are equal")
+        print("ERROR: p1 and p2 are equal")
         # return a random velocity for each
         return np.random.uniform(low=-1,high=1, size=(2,))
     return (p2-p1)/norm2(p1,p2)

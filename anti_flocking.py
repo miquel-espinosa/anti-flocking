@@ -17,9 +17,10 @@ debug = False
 obs1 = Obstacle(ld=[4,4],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[45,48])
 obstacles = [obs1, obs2]
+# obstacles = []
 
-START_TIME = time.monotonic()
-# START_TIME = 0
+if MODE=="continuous": START_TIME = time.monotonic()
+if MODE=="unique": START_TIME = 0
 
 swarm = Swarm(NUM_UAVS, obstacles)
 history_x = [[swarm.pos[i][0]] for i in range(NUM_UAVS)]
@@ -35,6 +36,8 @@ history_percentage = [0]
 # Coverage temperature map
 fig_cov_temp, ax_cov_temp = plt.subplots()
 image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+if MODE=="unique": image_cov_temp.set_clim(-1,1)
+if MODE=="continuous": image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
 fig_cov_temp.colorbar(image_cov_temp)
 
 
@@ -78,7 +81,11 @@ iter = 0
 
 # MAIN EXECUTION LOOP
 while swarm.coverage_percentage<99: # 99% coverage
+
+    # Increment iteration counter
     iter = iter + 1
+    # Initialization of neighbors
+    swarm.neighbors = [[] for i in range(NUM_UAVS)]
 
     # Print current coverage status
     if iter % 10 == 0:
@@ -96,8 +103,6 @@ while swarm.coverage_percentage<99: # 99% coverage
         swarm.vel_obs[agent] = np.zeros((1,2)) 
         # Set default goal to go to center of area --> only happens when everything is covered
         # swarm.goal[agent] = np.array([LENGTH/2,WIDTH/2])
-        # Initialization of neighbors
-        swarm.neighbors = [[] for i in range(NUM_UAVS)]
 
         # =======================================================================
         #           COMPUTE NEIGHBORS + SHARE MAPS + NEIGHBORS AVOIDANCE 
@@ -116,10 +121,9 @@ while swarm.coverage_percentage<99: # 99% coverage
                 swarm.coverage_map[agent] = new
                 swarm.coverage_map[agent2] = new
 
-                # if neighbor is within sensor radius, update obstacle avoidance velocity for both agents
-                if inter_dist<R_S:
-                    swarm.vel_obs[agent] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent2],swarm.pos[agent])
-                    swarm.vel_obs[agent2] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent],swarm.pos[agent2])
+                # if neighbor is within "danger zone", update obstacle avoidance velocity for both agents
+                swarm.vel_obs[agent] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent2],swarm.pos[agent])
+                swarm.vel_obs[agent2] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent],swarm.pos[agent2])
 
 
         # ====================================================================================
@@ -127,51 +131,44 @@ while swarm.coverage_percentage<99: # 99% coverage
         # ====================================================================================
         # Compute obstacle avoidance term AND update coverage map AND target grid selection
 
+        # ******************* TODO: TO REMOVE *************************************
         # BOUDING AREA: FOR OBSTACLE SCANNING, COVERAGE UPDATING AND SELECTING CELL GOAL
         # We consider an squared area that is R_S^2
-        x0 = int(np.floor(swarm.pos[agent][0]-2*R_S))
-        y0 = int(np.floor(swarm.pos[agent][1]-2*R_S))
-        x0_bounded = max(x0,0)
-        y0_bounded = max(y0,0)
-        x_upper = min(x0+4*R_S,WIDTH) 
-        y_upper = min(y0+4*R_S,LENGTH)
+        # Loop over agent square-area surroundings
+        # for x in range(x0_bounded,x_upper): 
+        #     for y in range(y0_bounded,y_upper):
+        # x0 = int(np.floor(swarm.pos[agent][0]-2*R_S))
+        # y0 = int(np.floor(swarm.pos[agent][1]-2*R_S))
+        # x0_bounded = max(x0,0)
+        # y0_bounded = max(y0,0)
+        # x_upper = min(x0+4*R_S,WIDTH) 
+        # y_upper = min(y0+4*R_S,LENGTH)
+        # ************************************************************************
         
         # AUX LOCAL VARIABLES
         max_fitness = 0 # Variable for storing the max_fitness
         best_angle = 180 # Variable for storing the best angle for choosing optimum goal cell
-
-        # Loop over agent square-area surroundings
-        for x in range(x0_bounded,x_upper): 
-            for y in range(y0_bounded,y_upper):
         
         # Loop over entire coverage area
-        # for x in range(0,WIDTH): 
-        #     for y in range(0,LENGTH):
+        for x in range(0,WIDTH): 
+            for y in range(0,LENGTH):
 
                 point = np.array((x,y)) # grid cell under consideration in current iteration
                 dist_to_point = norm2(swarm.pos[agent],point) # distance agent <--> grid_cell
 
-                # TODO: Should we check if obstacle is inside sensor range? This is given by s(z,d) function
-
-                # If inside the sensor radius
-                if dist_to_point < R_S: 
-
-                    # ---------- OBSTACLE AVOIDANCE ----------
-                    # Obstacles are marked with NEG_INF in coverage map
-                    # If obstacles are inside sensor radius, repulsion
-                    if swarm.coverage_map[agent][x][y] == NEG_INF: 
-                        # TODO: This is a temporary fix for controlling obstacle repulsion
-                        scale_down_factor=0.5
-                        swarm.vel_obs[agent] += (s(dist_to_point,D_O) * unitary_vector(point,swarm.pos[agent]))*scale_down_factor
+                # ---------- OBSTACLE AVOIDANCE ----------
+                # Obstacles are marked with NEG_INF in coverage map
+                # If obstacles are inside D_0 radius, repulsion
+                if swarm.coverage_map[agent][x][y] == NEG_INF: 
+                    swarm.vel_obs[agent] += (s(dist_to_point,D_O) * unitary_vector(point,swarm.pos[agent]))
                     
-                    # If it is not an obstacle, update that cell as already covered
-                    else: 
-                        # ---------- UPDATE COVERAGE MAP ----------
-                        # If inside not an obstacle and is inside the sensor range, update timestamp
-                        swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
-                        # swarm.coverage_map[agent][x][y] = 1
-                        # image_cov_temp.set_data((x,y))
-                        
+                # ---------- UPDATE COVERAGE MAP ----------
+                # If inside not an obstacle and is inside the sensor range, update timestamp
+                elif dist_to_point < R_S: 
+                    if MODE=="continuous": swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
+                    if MODE=="unique": swarm.coverage_map[agent][x][y] = 1
+                    # image_cov_temp.set_data((x,y))
+                    
                 # ---------- TARGET GRID SELECTION ----------
                 # If not an obstacle and not inside radius, compute heuristics
                 # We will perform target grid selection for those cells
@@ -184,19 +181,21 @@ while swarm.coverage_percentage<99: # 99% coverage
                             closest = False # If a neighbor is closer than agent (to point x,y)
 
                     if closest: # Compute fitness value for point
-                        # ( - I^p_i)
-                        time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
-                        # time_diff = 1-swarm.coverage_map[agent][x][y] 
-                        # distance to previous goal
-                        dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
-                        # exponent expression
-                        exponent = -ALPHA*dist_to_point-BETA*dist_to_prev_goal
-                        # final fitness calculation for point (x,y)
-                        fitness = time_diff*(RHO+(1-RHO)*math.exp(exponent))
+                        if MODE=="continuous":
+                            # ( - I^p_i)
+                            time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
+                            # time_diff = 1-swarm.coverage_map[agent][x][y] 
+                            # distance to previous goal
+                            dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
+                            # exponent expression
+                            exponent = -ALPHA*dist_to_point-BETA*dist_to_prev_goal
+                            # final fitness calculation for point (x,y)
+                            fitness = time_diff*(RHO+(1-RHO)*math.exp(exponent))
                         
                         """ Value 1: Not covered
                             Value 0: Already covered"""
-                        # fitness = 1-swarm.coverage_map[agent][x][y]
+                        if MODE=="unique":
+                            fitness = 1-swarm.coverage_map[agent][x][y]
 
                         if fitness > max_fitness:
                             max_fitness = fitness
@@ -212,7 +211,7 @@ while swarm.coverage_percentage<99: # 99% coverage
 
                         # elif (fitness == max_fitness) and (fitness != 0):
                         # elif fitness == max_fitness:
-                        elif abs(max_fitness-fitness)<0.005:
+                        elif abs(max_fitness-fitness)<0.005: # TODO: how to know this value
                             # print("HEHEHEHEHE",iter)
                             # print(fitness-max_fitness)
                             # Compute unitary velocity vector to possible goal
@@ -299,7 +298,7 @@ while swarm.coverage_percentage<99: # 99% coverage
         #                  CONTROL INPUT
         # ===================================================
 
-        if swarm.heading_angle[agent]>=0:
+        if swarm.diff_angle[agent]>=0:
             swarm.control_input[agent] = min(W_MAX,K_W*swarm.diff_angle[agent])
         else:
             swarm.control_input[agent] = max(-W_MAX,K_W*swarm.diff_angle[agent])
@@ -310,15 +309,17 @@ while swarm.coverage_percentage<99: # 99% coverage
         #         KINEMATIC LAWS - UPDATE POSITION
         # ===================================================
 
-        # X Position
-        swarm.pos[agent][0] = swarm.pos[agent][0] + CONSTANT_VELOCITY*TIME_STEP*math.cos(math.radians(swarm.heading_angle[agent]))
-
-        # Y Position
-        swarm.pos[agent][1] = swarm.pos[agent][1] + CONSTANT_VELOCITY*TIME_STEP*math.sin(math.radians(swarm.heading_angle[agent]))
-
+        # IMPORTANT!!! --> First we must update the heading angle
         # Heading angle
         swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
         if debug: print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
+
+        # With the new updated heading angle, we compute the next agent position
+        # X Position
+        swarm.pos[agent][0] = swarm.pos[agent][0] + CONSTANT_VELOCITY*TIME_STEP*math.cos(math.radians(swarm.heading_angle[agent]))
+        # Y Position
+        swarm.pos[agent][1] = swarm.pos[agent][1] + CONSTANT_VELOCITY*TIME_STEP*math.sin(math.radians(swarm.heading_angle[agent]))
+
 
 
     # ===================================================
@@ -393,13 +394,16 @@ while swarm.coverage_percentage<99: # 99% coverage
 
     # PLOT AREA COVERAGE TEMPERATURE MAP
     # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-    
+    image_cov_temp.set_data(np.rot90(swarm.coverage_map[0])) 
+    if iter%10==0 and MODE=="continuous":image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
+    # plt.draw()
+    # print(swarm.goal)
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    # fig_cov_temp.canvas.draw_idle()
+    fig_cov_temp.canvas.draw_idle()
     fig_cov_graph.canvas.draw_idle()
     fig_trajectories.canvas.draw_idle()
-    plt.pause(0.1)
+    plt.pause(0.01)
 
     
 
@@ -411,3 +415,4 @@ print("       Final coverage area: ",swarm.coverage_percentage,"%")
 print(" =========================================================")
 print()
 plt.waitforbuttonpress()
+time.sleep(5)
