@@ -1,4 +1,4 @@
-from constants import GEO_FENCE_WIDTH, LENGTH, WIDTH
+from constants import *
 import math
 import numpy as np
 
@@ -14,8 +14,7 @@ def norm1(p):
 
 def norm2(p1,p2):
     """ Scalar distance from p1 to p2 (without direction)"""
-    p = p1-p2 # Since we are squaring the terms: p1-p2 = p2-p1
-    return math.sqrt(p[0]*p[0]+p[1]*p[1])
+    return np.linalg.norm(p1-p2)
 
 def unitary_vector(p1,p2):
     """ Results in a unitary vector going from p1 to p2  [p1 --> p2] """
@@ -44,3 +43,19 @@ def outside_area(x,y):
         (x>LENGTH-GEO_FENCE_WIDTH) or (y>WIDTH-GEO_FENCE_WIDTH):
         return True
     return False
+
+def radius_covered(cov_map,pos):
+    """ Function to check in a square of R_S*R_S the number of already covered cells """
+    x0 = int(np.floor(pos[0]-R_S))
+    y0 = int(np.floor(pos[1]-R_S))
+    x0_lower = max(x0,0)
+    y0_lower = max(y0,0)
+    x_upper = min(x0+2*R_S,WIDTH) 
+    y_upper = min(y0+2*R_S,LENGTH)
+
+    total_covered=0
+    for x in range(x0_lower,x_upper):
+        for y in range(y0_lower,y_upper):
+            if cov_map[x][y]!=0:
+                total_covered = total_covered + 1
+    return total_covered

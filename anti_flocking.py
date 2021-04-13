@@ -16,8 +16,8 @@ debug = False
 
 obs1 = Obstacle(ld=[4,4],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[45,48])
-obstacles = [obs1, obs2]
-# obstacles = []
+# obstacles = [obs1, obs2]
+obstacles = []
 
 if MODE=="continuous": START_TIME = time.monotonic()
 if MODE=="unique": START_TIME = 0
@@ -78,9 +78,10 @@ for c in np.arange(0., 360., 360./NUM_UAVS):
 
 # Iteration counter
 iter = 0
+FINAL_CONDITION = True
 
 # MAIN EXECUTION LOOP
-while swarm.coverage_percentage<99: # 99% coverage
+while FINAL_CONDITION: # 99% coverage
 
     # Increment iteration counter
     iter = iter + 1
@@ -114,12 +115,6 @@ while swarm.coverage_percentage<99: # 99% coverage
             if inter_dist<R_C:
                 swarm.neighbors[agent].append(agent2)
                 swarm.neighbors[agent2].append(agent)
-                
-                # Sharing of coverage maps
-                # TODO: Map sharing should be done after map coverage update ¿?
-                new = np.maximum(swarm.coverage_map[agent],swarm.coverage_map[agent2])
-                swarm.coverage_map[agent] = new
-                swarm.coverage_map[agent2] = new
 
                 # if neighbor is within "danger zone", update obstacle avoidance velocity for both agents
                 swarm.vel_obs[agent] += s(inter_dist,D_O)*unitary_vector(swarm.pos[agent2],swarm.pos[agent])
@@ -130,20 +125,6 @@ while swarm.coverage_percentage<99: # 99% coverage
         #     OBSTACLES AVOIDANCE + UPDATE COVERAGE MAP (timestamps) + TARGET GRID SELECTION
         # ====================================================================================
         # Compute obstacle avoidance term AND update coverage map AND target grid selection
-
-        # ******************* TODO: TO REMOVE *************************************
-        # BOUDING AREA: FOR OBSTACLE SCANNING, COVERAGE UPDATING AND SELECTING CELL GOAL
-        # We consider an squared area that is R_S^2
-        # Loop over agent square-area surroundings
-        # for x in range(x0_bounded,x_upper): 
-        #     for y in range(y0_bounded,y_upper):
-        # x0 = int(np.floor(swarm.pos[agent][0]-2*R_S))
-        # y0 = int(np.floor(swarm.pos[agent][1]-2*R_S))
-        # x0_bounded = max(x0,0)
-        # y0_bounded = max(y0,0)
-        # x_upper = min(x0+4*R_S,WIDTH) 
-        # y_upper = min(y0+4*R_S,LENGTH)
-        # ************************************************************************
         
         # AUX LOCAL VARIABLES
         max_fitness = 0 # Variable for storing the max_fitness
@@ -167,24 +148,41 @@ while swarm.coverage_percentage<99: # 99% coverage
                 elif dist_to_point < R_S: 
                     if MODE=="continuous": swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
                     if MODE=="unique": swarm.coverage_map[agent][x][y] = 1
-                    # image_cov_temp.set_data((x,y))
                     
                 # ---------- TARGET GRID SELECTION ----------
                 # If not an obstacle and not inside radius, compute heuristics
                 # We will perform target grid selection for those cells
                 # that are:  R_S < cells < 2*R_S  
                 elif (swarm.coverage_map[agent][x][y] != NEG_INF) and (not outside_area(x,y)):
+
                     # Compute closest neighbor to this point
                     closest = True
+                    goal_dist = max(WIDTH,LENGTH)
                     for neig in swarm.neighbors[agent]:
-                        if norm2(point,swarm.pos[neig])<dist_to_point:
-                            closest = False # If a neighbor is closer than agent (to point x,y)
+                        dist_to_neig = norm2(point,swarm.pos[neig])
+                        dist_to_neig_goal = norm2(point,swarm.goal[neig])
+                        # If a neighbor is closer than agent (to point x,y)
+                        # or if point is too close to neighbor goal --> skip point
+                        if dist_to_neig<dist_to_point or dist_to_neig_goal < MIN_GOAL_DIST:
+                            closest = False 
 
                     if closest: # Compute fitness value for point
-                        if MODE=="continuous":
+
+                        # ----------------- FITNESS FUNCTION CALCULATION -----------------
+                        # Fitness value: the higher, the more priority
+
+                        if MODE=="continuous": # surveillance mode (with time)
                             # ( - I^p_i)
-                            time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
-                            # time_diff = 1-swarm.coverage_map[agent][x][y] 
+                            # This will ensure that the agent prioritizes cells that have not been covered yet
+                            if swarm.coverage_map[agent][x][y] == 0 and GOAL_OPTIMIZATION:
+                                time_diff = (time.monotonic()-START_TIME)*100
+                                if GOAL_OPTIMIZATION:
+                                    # Indicates the number of cells withing R_S radius of selected point that have already been covered in the past
+                                    adjacent_coverage=radius_covered(swarm.coverage_map[agent],point)
+                                    # Penalize points with neighbors already covered
+                                    time_diff = time_diff - adjacent_coverage
+                            else:
+                                time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
                             # distance to previous goal
                             dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
                             # exponent expression
@@ -194,8 +192,15 @@ while swarm.coverage_percentage<99: # 99% coverage
                         
                         """ Value 1: Not covered
                             Value 0: Already covered"""
-                        if MODE=="unique":
+                        if MODE=="unique": # no time consideration
                             fitness = 1-swarm.coverage_map[agent][x][y]
+                            if GOAL_OPTIMIZATION:
+                                # Indicates the number of cells withing R_S radius of selected point that have already been covered in the past
+                                adjacent_coverage=radius_covered(swarm.coverage_map[agent],point)
+                                # To avoid division by zero
+                                if adjacent_coverage==0: adjacent_coverage = 1
+                                # Penalize points with neighbors already covered
+                                fitness = fitness + (1/adjacent_coverage)*10
 
                         if fitness > max_fitness:
                             max_fitness = fitness
@@ -204,16 +209,10 @@ while swarm.coverage_percentage<99: # 99% coverage
                             vel_goal=unitary_vector(swarm.pos[agent],point)
                             # Update best current angle to point to best current goal
                             best_angle = angle_between(swarm.vel_actual[agent],vel_goal)
-                        
-                        # TODO: It needs to be adjusted correctly
-                        # In order to avoid oscillation situation: choose the goal with better angle
-                        # We will check with a rounding of two decimal places for the fitnesses values
 
                         # elif (fitness == max_fitness) and (fitness != 0):
                         # elif fitness == max_fitness:
                         elif abs(max_fitness-fitness)<0.005: # TODO: how to know this value
-                            # print("HEHEHEHEHE",iter)
-                            # print(fitness-max_fitness)
                             # Compute unitary velocity vector to possible goal
                             vel_goal=unitary_vector(swarm.pos[agent],point)
                             # Compute angle between actual velocity and possible goal
@@ -238,6 +237,12 @@ while swarm.coverage_percentage<99: # 99% coverage
             for neig in swarm.neighbors[agent]:
                 mean[0] += swarm.pos[neig][0]
                 mean[1] += swarm.pos[neig][1]
+
+                # Sharing of coverage maps between neighbors
+                new = np.maximum(swarm.coverage_map[agent],swarm.coverage_map[neig])
+                swarm.coverage_map[agent] = new
+                swarm.coverage_map[neig] = new
+
             mean = mean/(num_neighbors+1)
 
             # Update Decentering velocity for current agent
@@ -404,6 +409,9 @@ while swarm.coverage_percentage<99: # 99% coverage
     fig_cov_graph.canvas.draw_idle()
     fig_trajectories.canvas.draw_idle()
     plt.pause(0.01)
+
+    # FINAL CONDITION:
+    if MODE=="unique": FINAL_CONDITION = (swarm.coverage_percentage < 95)
 
     
 

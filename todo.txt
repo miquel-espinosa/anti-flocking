@@ -30,10 +30,8 @@ QUESTIONS:
 
 
 NEXT STEPS:
- - Acabar de perfilar bien el código y ver algunos bugs que todavía hay.
-    - Ej. Los agentes se juntan demasiado aun cuando hay mucho espacio por cubrir todavía.
 
- - Rethink fitness function for surveillance !!! --> más prioridad a las zonas no cubiertas todavía (mmm, quiza inicializar con número grande negativo ¿-infinito?) --> obstacles = 0 mmm think about this
+ - Optimizar aun más la selección del siguiente goal para evitar que cubra dos veces las mismas partes mmm
 
  - Obstacle definition in external file
 
