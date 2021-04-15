@@ -1,4 +1,4 @@
-from constants import *
+from constants import Constants
 import math
 import numpy as np
 
@@ -19,7 +19,6 @@ def norm2(p1,p2):
 def unitary_vector(p1,p2):
     """ Results in a unitary vector going from p1 to p2  [p1 --> p2] """
     if (p1==p2).all():
-        print("ERROR: p1 and p2 are equal")
         # return a random velocity for each
         return np.random.uniform(low=-1,high=1, size=(2,))
     return (p2-p1)/norm2(p1,p2)
@@ -30,6 +29,7 @@ def angle_between(vec1,vec2):
     dot_product = np.dot(vec1,vec2)
     
     # Ensure a value between -1 and 1 is passed to acos function
+    # if divisor == 0: return 0
     value = dot_product/divisor
     if value > 1: value = 1
     elif value < -1: value = -1
@@ -39,19 +39,19 @@ def angle_between(vec1,vec2):
 
 def outside_area(x,y):
     """ Function to check if point is outside the permitted area """
-    if (x<GEO_FENCE_WIDTH) or (y<GEO_FENCE_WIDTH) or \
-        (x>LENGTH-GEO_FENCE_WIDTH) or (y>WIDTH-GEO_FENCE_WIDTH):
+    if (x<Constants.GEO_FENCE_WIDTH) or (y<Constants.GEO_FENCE_WIDTH) or \
+        (x>Constants.LENGTH-Constants.GEO_FENCE_WIDTH) or (y>Constants.WIDTH-Constants.GEO_FENCE_WIDTH):
         return True
     return False
 
 def radius_covered(cov_map,pos):
     """ Function to check in a square of R_S*R_S the number of already covered cells """
-    x0 = int(np.floor(pos[0]-R_S))
-    y0 = int(np.floor(pos[1]-R_S))
+    x0 = int(np.floor(pos[0]-Constants.R_S))
+    y0 = int(np.floor(pos[1]-Constants.R_S))
     x0_lower = max(x0,0)
     y0_lower = max(y0,0)
-    x_upper = min(x0+2*R_S,WIDTH) 
-    y_upper = min(y0+2*R_S,LENGTH)
+    x_upper = min(x0+2*Constants.R_S,Constants.WIDTH) 
+    y_upper = min(y0+2*Constants.R_S,Constants.LENGTH)
 
     total_covered=0
     for x in range(x0_lower,x_upper):
@@ -59,3 +59,13 @@ def radius_covered(cov_map,pos):
             if cov_map[x][y]!=0:
                 total_covered = total_covered + 1
     return total_covered
+
+def percentage_covered(swarm):
+    """ Function to compute total percentage covered """
+    area = Constants.WIDTH * Constants.LENGTH
+    if Constants.NUM_UAVS >= 2:
+        aux_max = np.maximum(swarm.coverage_map[0],swarm.coverage_map[1])
+        for i in range(2,Constants.NUM_UAVS): aux_max = np.maximum(aux_max,swarm.coverage_map[i])
+    else:
+        aux_max = swarm.coverage_map[0]
+    return (np.count_nonzero(aux_max)/area)*100 

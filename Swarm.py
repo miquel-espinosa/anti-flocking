@@ -3,7 +3,7 @@
 import numpy as np
 import random
 
-from constants import *
+from constants import Constants
 from functions import *
 
 
@@ -57,14 +57,15 @@ class Swarm(object):
         # (x,y) previous grid goal
         self.prev_goal = np.zeros_like(self.pos)
 
+        # Acumulated percentage coverage
         self.coverage_percentage = 0
 
     # Mark with -1 all cells with obstacle inside
     def init_coverage_map(self, num_uavs, obstacles):
-        cov_map = np.zeros((WIDTH,LENGTH)) 
+        cov_map = np.zeros((Constants.WIDTH,Constants.LENGTH)) 
         for obs in obstacles:
             for row in range(obs.ld[0],obs.ru[0]):
-                cov_map[row][obs.ld[1]:obs.ru[1]] = NEG_INF
+                cov_map[row][obs.ld[1]:obs.ru[1]] = Constants.NEG_INF
         return np.array([cov_map]*num_uavs)
 
     # TODO: Initial position of drones 
@@ -74,7 +75,7 @@ class Swarm(object):
     def init_positions(self, num, pos):
         # return np.random.rand(num,2)*(LENGTH/2)
         # Init all in the middle?
-        return np.full((num,2),LENGTH/2) 
+        return np.full((num,2),Constants.LENGTH/2) 
         # return np.random.rand(num,2)*WIDTH + 1 
 
 
@@ -82,7 +83,7 @@ class Swarm(object):
 class Obstacle(object):
 
     def __init__(self,ld,ru):
-        self.ld = ld # Left-down
-        self.ru = ru # Right-up
+        self.ld = ld # Left-down coordinates
+        self.ru = ru # Right-up coordinates
                 
 
