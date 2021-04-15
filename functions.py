@@ -38,7 +38,7 @@ def angle_between(vec1,vec2):
     return math.degrees(math.acos(value))
 
 def outside_area(x,y):
-    """ Function to check if point is outiside the permitted area """
+    """ Function to check if point is outside the permitted area """
     if (x<GEO_FENCE_WIDTH) or (y<GEO_FENCE_WIDTH) or \
         (x>LENGTH-GEO_FENCE_WIDTH) or (y>WIDTH-GEO_FENCE_WIDTH):
         return True

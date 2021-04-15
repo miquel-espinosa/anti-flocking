@@ -4,14 +4,41 @@ import math, sys
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrow, Circle, Rectangle
-import time, colorsys
+from matplotlib.animation import FuncAnimation
+import time, colorsys, getopt
 
 from constants import *
 from Swarm import *
 from functions import *
 
-# DEBUGGING
-debug = False
+# -------------------------- Arguments parsing -------------------------- #
+# Options 
+options = "f:n:"
+# Long options 
+long_options = ["file=", "numuavs=", "realtime=", "trajectory=", "cumulative=", "temperature="]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:],options,long_options)
+except getopt.GetoptError:
+    # print('main.py -f <outputfile> -r <robot> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
+    sys.exit(2)
+
+for opt, arg in opts:
+    if opt == '-h':
+        # print('main.py -f <outputfile> -h <help> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
+        sys.exit()
+    elif opt in ("-f", "--file"):
+        RESULTS_DIR = arg
+    elif opt in ("-n", "--numuavs"):
+        NUM_UAVS = int(arg)
+    elif opt =="--realtime":
+        REAL_TIME = bool(arg)
+
+if REAL_TIME==False: 
+    TRAJECTORY_PLOT = False
+    CUMULATIVE_PERCENTAGE = False
+    COVERAGE_TEMPERATURE = False
+
 
 
 obs1 = Obstacle(ld=[4,4],ru=[18,17])
@@ -26,7 +53,6 @@ swarm = Swarm(NUM_UAVS, obstacles)
 history_x = [[swarm.pos[i][0]] for i in range(NUM_UAVS)]
 history_y = [[swarm.pos[i][1]] for i in range(NUM_UAVS)]
 history_percentage = [0]
- 
 
 
 # ======================================================
@@ -34,32 +60,34 @@ history_percentage = [0]
 # ======================================================
 
 # Coverage temperature map
-fig_cov_temp, ax_cov_temp = plt.subplots()
-image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-if MODE=="unique": image_cov_temp.set_clim(-1,1)
-if MODE=="continuous": image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
-fig_cov_temp.colorbar(image_cov_temp)
+if COVERAGE_TEMPERATURE:
+    fig_cov_temp, ax_cov_temp = plt.subplots()
+    image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+    if MODE=="unique": image_cov_temp.set_clim(-1,1)
+    if MODE=="continuous": image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
+    fig_cov_temp.colorbar(image_cov_temp)
 
 
 # Drone simulation map
-fig_trajectories, ax_trajectories = plt.subplots()
-sc = [[] for i in range(NUM_UAVS)]
-for i in range(NUM_UAVS):
-    sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
+if TRAJECTORY_PLOT:
+    fig_trajectories, ax_trajectories = plt.subplots()
+    sc = [[] for i in range(NUM_UAVS)]
+    for i in range(NUM_UAVS):
+        sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
 
-boundary = Rectangle((0,0), WIDTH, LENGTH, linewidth=1, edgecolor='black', facecolor="lightgrey")
-geo_fence = Rectangle((GEO_FENCE_WIDTH,GEO_FENCE_WIDTH), WIDTH-2*GEO_FENCE_WIDTH, LENGTH-2*GEO_FENCE_WIDTH, linewidth=0.5, edgecolor='grey', facecolor="White")
-ax_trajectories.add_patch(boundary)
-ax_trajectories.add_patch(geo_fence)
+    boundary = Rectangle((0,0), WIDTH, LENGTH, linewidth=1, edgecolor='black', facecolor="gainsboro")
+    geo_fence = Rectangle((GEO_FENCE_WIDTH,GEO_FENCE_WIDTH), WIDTH-2*GEO_FENCE_WIDTH, LENGTH-2*GEO_FENCE_WIDTH, linewidth=0.5, edgecolor='grey', facecolor="White")
+    ax_trajectories.add_patch(boundary)
+    ax_trajectories.add_patch(geo_fence)
 
-ax_trajectories.set_xlim(-10, WIDTH+10)   
-ax_trajectories.set_ylim(-10, LENGTH+10)  
-ax_trajectories.set_aspect('equal', adjustable='box')
+    ax_trajectories.set_xlim(-10, WIDTH+10)   
+    ax_trajectories.set_ylim(-10, LENGTH+10)  
+    ax_trajectories.set_aspect('equal', adjustable='box')
 
 # Coverage percentage map
-fig_cov_graph, ax_cov_graph = plt.subplots()
-static_percentage_graph = False
-ax_cov_graph.set_ylim(0,100)   
+if CUMULATIVE_PERCENTAGE:    
+    fig_cov_graph, ax_cov_graph = plt.subplots()
+    ax_cov_graph.set_ylim(0,100)   
 
 
 for obs in obstacles:
@@ -67,9 +95,8 @@ for obs in obstacles:
     height = obs.ru[1]-obs.ld[1]
     rect = Rectangle((obs.ld[0], obs.ld[1]), width, height, linewidth=1, edgecolor='black', hatch="////", facecolor="lightgrey")
     # Add the patch to the Axes
-    ax_trajectories.add_patch(rect)
+    if TRAJECTORY_PLOT: ax_trajectories.add_patch(rect)
     
-
 
 agent_colors=[]
 for c in np.arange(0., 360., 360./NUM_UAVS):
@@ -102,8 +129,6 @@ while FINAL_CONDITION: # 99% coverage
         swarm.prev_goal[agent] = swarm.goal[agent]
         # Init obstacle velocity
         swarm.vel_obs[agent] = np.zeros((1,2)) 
-        # Set default goal to go to center of area --> only happens when everything is covered
-        # swarm.goal[agent] = np.array([LENGTH/2,WIDTH/2])
 
         # =======================================================================
         #           COMPUTE NEIGHBORS + SHARE MAPS + NEIGHBORS AVOIDANCE 
@@ -247,7 +272,8 @@ while FINAL_CONDITION: # 99% coverage
 
             # Update Decentering velocity for current agent
             swarm.vel_dec[agent]=s(norm2(mean,swarm.pos[agent]),D_C)*unitary_vector(mean,swarm.pos[agent])
-
+        else:
+            swarm.vel_dec[agent]= np.zeros((2))
 
         # ===================================================
         #                 SELFISHNESS TERM
@@ -277,26 +303,16 @@ while FINAL_CONDITION: # 99% coverage
                                 + K_S*swarm.vel_sel[agent] \
                                 + K_B*swarm.vel_bou[agent]
         
-        
 
         # ===================================================
         #             COMPUTE DIFFERENCE ANGLE 
-        # ===================================================
-
-        # Actual velocity
-        swarm.vel_actual[agent] = np.array([math.cos(math.radians(swarm.heading_angle[agent])),math.sin(math.radians(swarm.heading_angle[agent]))])
-
-        if debug: print("VEL DESIRED: ",swarm.vel_desired[agent])
-        if debug: print("VEL ACTUAL: ",swarm.vel_actual[agent])
-        
+        # ===================================================    
 
         # Compute angle between actual velocity and desired velocity terms
         # Positive or negative sign
         sign_result = math.copysign(1,np.cross(np.append(swarm.vel_actual[agent],0),np.append(swarm.vel_desired[agent],0))[2])
         # Final computation for agent angle
         swarm.diff_angle[agent] = angle_between(swarm.vel_desired[agent],swarm.vel_actual[agent])*sign_result
-        if debug: print("DIFF ANGLE:",swarm.diff_angle[agent])
-        
 
 
         # ===================================================
@@ -308,7 +324,6 @@ while FINAL_CONDITION: # 99% coverage
         else:
             swarm.control_input[agent] = max(-W_MAX,K_W*swarm.diff_angle[agent])
 
-        if debug: print("CONTROL INPUT: ",swarm.control_input[agent])
 
         # ===================================================
         #         KINEMATIC LAWS - UPDATE POSITION
@@ -317,7 +332,9 @@ while FINAL_CONDITION: # 99% coverage
         # IMPORTANT!!! --> First we must update the heading angle
         # Heading angle
         swarm.heading_angle[agent] = swarm.heading_angle[agent] + CONSTANT_VELOCITY*TIME_STEP*swarm.control_input[agent]
-        if debug: print("NEXT HEADING ANGLE: ",swarm.heading_angle[agent])
+
+        # Update the actual velocity once the heading angle is updated
+        swarm.vel_actual[agent] = np.array([math.cos(math.radians(swarm.heading_angle[agent])),math.sin(math.radians(swarm.heading_angle[agent]))]) 
 
         # With the new updated heading angle, we compute the next agent position
         # X Position
@@ -327,45 +344,32 @@ while FINAL_CONDITION: # 99% coverage
 
 
 
-    # ===================================================
-    #                 PLOT GRAPH
-    # ===================================================
-    
-
-        # Draw obstacles
-
-        # plt.xlabel('x (m)')
-        # plt.ylabel('y (m)')
-
+        # ===================================================
+        #                 PLOT GRAPH
+        # ===================================================
         history_x[agent].append(swarm.pos[agent][0])
         history_y[agent].append(swarm.pos[agent][1])
 
-        # sc[agent].set_offsets(np.c_[history_x[agent],history_y[agent]])
-        # prueba = ax.scatter(swarm.pos[agent][0],swarm.pos[agent][1], s=1, color=agent_colors[agent])
-        string_path_data = [
-            (mpath.Path.MOVETO, (history_x[agent][-2],history_y[agent][-2])),
-            (mpath.Path.CURVE3, (history_x[agent][-2],history_y[agent][-2])),
-            (mpath.Path.CURVE3, (history_x[agent][-1],history_y[agent][-1]))]
+        # Trajectory drawing
+        if TRAJECTORY_PLOT:
+            string_path_data = [
+                (mpath.Path.MOVETO, (history_x[agent][-2],history_y[agent][-2])),
+                (mpath.Path.CURVE3, (history_x[agent][-2],history_y[agent][-2])),
+                (mpath.Path.CURVE3, (history_x[agent][-1],history_y[agent][-1]))]
 
-        codes, verts = zip(*string_path_data)
-        string_path = mpath.Path(verts, codes)
-        patch = mpatches.PathPatch(string_path, color=agent_colors[agent], lw=2)
+            codes, verts = zip(*string_path_data)
+            string_path = mpath.Path(verts, codes)
+            patch = mpatches.PathPatch(string_path, color=agent_colors[agent], lw=2)
 
-        ax_trajectories.add_patch(patch)
-        # Add circles
-        # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
-        # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_C,edgecolor="lavender",fill=False,linestyle="--"))
+            ax_trajectories.add_patch(patch)
+            # Add sensor and communication radius circles
+            # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
+            # ax_trajectories.add_patch(Circle(swarm.pos[agent],R_C,edgecolor="lavender",fill=False,linestyle="--"))
 
-
-        if debug: print("------------------------")
-
-        # ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent], zorder=2)
+            # ax_trajectories.scatter(swarm.goal[agent][0],swarm.goal[agent][1], s=1,color=agent_colors[agent], zorder=2)
         
         # ============================ END OF AGENT ITERATION ===============================
 
-
-    if debug: print("POS AGENT 1: ",swarm.pos[0])
-    if debug: print("COVERED: ",swarm.coverage_map[0][int(swarm.goal[0][0])][int(swarm.goal[0][1])])
 
     # desired_vel = ax_trajectories.scatter(swarm.pos[0][0]+swarm.vel_actual[0][0],swarm.pos[0][1]+swarm.vel_actual[0][1], s=1, zorder=2)
     
@@ -378,42 +382,38 @@ while FINAL_CONDITION: # 99% coverage
     else:
         aux_max = swarm.coverage_map[0]
     swarm.coverage_percentage = (np.count_nonzero(aux_max)/area)*100 
-    history_percentage.append(swarm.coverage_percentage)
-    if debug: print("COVERAGE: ",swarm.coverage_percentage,"%")
-
+    
     # PLOT COVERAGE PERCENTAGE GRAPH
-    if static_percentage_graph:
-        string_percentage = [
-            (mpath.Path.MOVETO, (iter-1,history_percentage[-2])),
-            (mpath.Path.CURVE3, (iter-1,history_percentage[-2])),
-            (mpath.Path.CURVE3, (iter,history_percentage[-1]))]
-
-        cod, ver = zip(*string_percentage)
-        line = mpath.Path(ver, cod)
-        patch_line = mpatches.PathPatch(line, color="b", lw=2)
-        length = len(history_percentage)
-        ax_cov_graph.set_xlim(max(0,length-200),max(length,200))
-        ax_cov_graph.add_patch(patch_line)
-    else:
+    if CUMULATIVE_PERCENTAGE:
+        history_percentage.append(swarm.coverage_percentage)
         ax_cov_graph.plot(history_percentage, color="b")
+        # string_percentage = [
+        #     (mpath.Path.MOVETO, (iter-1,history_percentage[-2])),
+        #     (mpath.Path.CURVE3, (iter-1,history_percentage[-2])),
+        #     (mpath.Path.CURVE3, (iter,history_percentage[-1]))]
+
+        # cod, ver = zip(*string_percentage)
+        # line = mpath.Path(ver, cod)
+        # patch_line = mpatches.PathPatch(line, color="b", lw=2)
+        # length = len(history_percentage)
+        # ax_cov_graph.set_xlim(max(0,length-200),max(length,200))
+        # ax_cov_graph.add_patch(patch_line)
 
     # PLOT AREA COVERAGE TEMPERATURE MAP
-    # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
-    image_cov_temp.set_data(np.rot90(swarm.coverage_map[0])) 
-    if iter%10==0 and MODE=="continuous":image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
-    # plt.draw()
-    # print(swarm.goal)
+    if COVERAGE_TEMPERATURE:
+    # im = ax_cov_temp.imshow(np.rot90(swarm.coverage_map[0]), cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')   
+        image_cov_temp.set_data(np.rot90(swarm.coverage_map[0]))
+        if iter%10==0 and MODE=="continuous":image_cov_temp.set_clim(NEG_INF,time.monotonic()-START_TIME)
 
     # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    fig_cov_temp.canvas.draw_idle()
-    fig_cov_graph.canvas.draw_idle()
-    fig_trajectories.canvas.draw_idle()
+    if COVERAGE_TEMPERATURE: fig_cov_temp.canvas.draw_idle()
+    if CUMULATIVE_PERCENTAGE: fig_cov_graph.canvas.draw_idle()
+    if TRAJECTORY_PLOT: fig_trajectories.canvas.draw_idle()
     plt.pause(0.01)
 
     # FINAL CONDITION:
     if MODE=="unique": FINAL_CONDITION = (swarm.coverage_percentage < 95)
 
-    
 
 print()
 print(" ============ AREA COVERAGE MISSION COMPLETED ============")

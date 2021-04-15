@@ -28,10 +28,10 @@ class Swarm(object):
         self.coverage_map = self.init_coverage_map(num, obstacles)
         
         # Actual velocity direction term
-        self.vel_actual = np.ones((num,2))
+        self.vel_actual = np.zeros((num,2))
 
         # Desired velocity direction term
-        self.vel_desired = np.ones((num,2))
+        self.vel_desired = np.zeros((num,2))
         
         # Obstacle avoidance velocity term
         self.vel_obs = np.zeros((num,2)) 

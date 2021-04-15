@@ -59,6 +59,15 @@ NEG_INF = -40
       unique: Unique coverage (no time consideration)
       continuous: Surveillance coverage (time consideration)
 """
-MODE = "unique"
-GOAL_OPTIMIZATION=False
+MODE = "continuous"
+GOAL_OPTIMIZATION=True
 MIN_GOAL_DIST=R_S
+
+
+"""
+    PLOTTING PARAMETERS
+"""
+REAL_TIME = True
+TRAJECTORY_PLOT = True
+CUMULATIVE_PERCENTAGE = False
+COVERAGE_TEMPERATURE = False
