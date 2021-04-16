@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*- 
-
 import numpy as np
 import random
 
 from constants import Constants
-from functions import *
 
 
 class Swarm(object):

@@ -20,7 +20,7 @@ def trajectory_patch(history_x, history_y, agent, agent_colors):
 
 def plot_coverage_temperature(swarm, START_TIME):
     fig_cov_temp, ax_cov_temp = plt.subplots()
-    image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.RdBu, extent=(-3, 3, 3, -3), interpolation='bilinear')
+    image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.get_cmap("RdBu"), extent=(-3, 3, 3, -3), interpolation='bilinear')
     if Constants.MODE=="unique": image_cov_temp.set_clim(-1,1)
     if Constants.MODE=="continuous": image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
     fig_cov_temp.colorbar(image_cov_temp)

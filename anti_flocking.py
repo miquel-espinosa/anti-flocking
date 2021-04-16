@@ -1,24 +1,19 @@
-import matplotlib.path as mpath
-import matplotlib.patches as mpatches
-import math, sys
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrow, Circle, Rectangle
-from matplotlib.animation import FuncAnimation
-import time, getopt
+from matplotlib.patches import Circle
+import time
 
 from constants import Constants
-from Swarm import *
-from functions import *
-from rules import *
-from plot import *
+from Swarm import Swarm, Obstacle
+from rules import arguments, agent_iteration, percentage_covered
+from plot import trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, assign_agent_colors
 
 
 arguments()
 
 
-obs1 = Obstacle(ld=[4,4],ru=[18,17])
-obs2 = Obstacle(ld=[32,36],ru=[45,48])
+obs1 = Obstacle(ld=[10,10],ru=[18,17])
+obs2 = Obstacle(ld=[32,36],ru=[40,40])
 obstacles = [obs1, obs2]
 # obstacles = []
 
@@ -38,11 +33,9 @@ history_percentage = [0]
 if Constants.COVERAGE_TEMPERATURE:
     fig_cov_temp, ax_cov_temp, image_cov_temp = plot_coverage_temperature(swarm, START_TIME)
 
-# Drone simulation map
 if Constants.TRAJECTORY_PLOT:
     fig_trajectories, ax_trajectories = plot_simulation_map(history_x,history_y)
 
-# Coverage percentage map
 if Constants.CUMULATIVE_PERCENTAGE:    
     fig_cov_graph, ax_cov_graph = plt.subplots()
     ax_cov_graph.set_ylim(0,100)   
@@ -67,6 +60,7 @@ while FINAL_CONDITION: # 99% coverage
     # MAIN LOOP 2
     for agent in range(Constants.NUM_UAVS):
 
+        # Most important function
         agent_iteration(START_TIME,swarm,agent)
 
         # ===================================================

@@ -31,6 +31,8 @@ QUESTIONS:
 
 NEXT STEPS:
 
+ - Faster simulation
+
  - Optimizar aun más la selección del siguiente goal para evitar que cubra dos veces las mismas partes mmm
 
  - Obstacle definition in external file

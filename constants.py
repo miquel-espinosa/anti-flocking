@@ -71,6 +71,6 @@ class Constants(object):
     REAL_TIME = True
     TRAJECTORY_PLOT = True
     CUMULATIVE_PERCENTAGE = True
-    COVERAGE_TEMPERATURE = False
+    COVERAGE_TEMPERATURE = True
 
     ADD_CIRCLES = False

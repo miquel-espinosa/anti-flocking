@@ -85,6 +85,10 @@ def decentering_velocity(swarm, agent):
 
 
 def agent_iteration(START_TIME, swarm, agent):
+    """ 
+        An agent iteration.
+        Velocity components and everything is computed here
+    """
 
     init(swarm,agent)
 
@@ -231,6 +235,17 @@ def agent_iteration(START_TIME, swarm, agent):
 
 
 
+def percentage_covered(swarm):
+    """ Function to compute total percentage covered """
+    area = Constants.WIDTH * Constants.LENGTH
+    if Constants.NUM_UAVS >= 2:
+        aux_max = np.maximum(swarm.coverage_map[0],swarm.coverage_map[1])
+        for i in range(2,Constants.NUM_UAVS): aux_max = np.maximum(aux_max,swarm.coverage_map[i])
+    else:
+        aux_max = swarm.coverage_map[0]
+    return (np.count_nonzero(aux_max)/area)*100 
+
+
 
 def arguments():
     # -------------------------- Arguments parsing -------------------------- #
@@ -240,7 +255,7 @@ def arguments():
     long_options = ["file=", "numuavs=", "realtime=", "trajectory=", "cumulative=", "temperature="]
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:],options,long_options)
+        opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
     except getopt.GetoptError:
         # print('main.py -f <outputfile> -r <robot> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
         sys.exit(2)

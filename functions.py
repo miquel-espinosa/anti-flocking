@@ -8,10 +8,6 @@ def s(z,d):
     else:
         return 1+math.cos((math.pi*(z+d))/(2*d))
 
-def norm1(p):
-    """Scalar magnitude of a vector from (0,0)"""
-    return math.sqrt(p[0]*p[0]+p[1]*p[1])
-
 def norm2(p1,p2):
     """ Scalar distance from p1 to p2 (without direction)"""
     return np.linalg.norm(p1-p2)
@@ -24,6 +20,11 @@ def unitary_vector(p1,p2):
     return (p2-p1)/norm2(p1,p2)
 
 def angle_between(vec1,vec2):
+
+    def norm1(p):
+        """Scalar magnitude of a vector from (0,0)"""
+        return math.sqrt(p[0]*p[0]+p[1]*p[1])
+
     """ Compute angle between vector1 and vector2 """
     divisor = norm1(vec1)*norm1(vec2)
     dot_product = np.dot(vec1,vec2)
@@ -60,12 +61,3 @@ def radius_covered(cov_map,pos):
                 total_covered = total_covered + 1
     return total_covered
 
-def percentage_covered(swarm):
-    """ Function to compute total percentage covered """
-    area = Constants.WIDTH * Constants.LENGTH
-    if Constants.NUM_UAVS >= 2:
-        aux_max = np.maximum(swarm.coverage_map[0],swarm.coverage_map[1])
-        for i in range(2,Constants.NUM_UAVS): aux_max = np.maximum(aux_max,swarm.coverage_map[i])
-    else:
-        aux_max = swarm.coverage_map[0]
-    return (np.count_nonzero(aux_max)/area)*100 
