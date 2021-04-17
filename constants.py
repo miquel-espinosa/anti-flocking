@@ -74,7 +74,7 @@ class Constants(object):
     COVERAGE_TEMPERATURE = True
     COST = False
 
-    VIDEOS = False
+    VIDEOS = True
 
     CIRCLE_SENSOR = True
     CIRCLE_COMMUNICATION = False

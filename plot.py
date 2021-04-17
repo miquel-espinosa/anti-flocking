@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import time, colorsys, subprocess
 import numpy as np
+import tkinter as tk
+from platform import system
 
 from constants import Constants
 
@@ -18,11 +20,10 @@ def trajectory_patch(history_x, history_y, agent, agent_colors):
     return mpatches.PathPatch(string_path, color=agent_colors[agent], lw=2)
 
 
-def plot_coverage_temperature(swarm, START_TIME):
-    fig_cov_temp, ax_cov_temp = plt.subplots()
+def plot_coverage_temperature(fig, ax_cov_temp, swarm, START_TIME):
     image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.get_cmap("RdBu"), extent=(-3, 3, 3, -3), interpolation='bilinear')
     
-    cbar = fig_cov_temp.colorbar(image_cov_temp)
+    cbar = fig.colorbar(image_cov_temp, ax=ax_cov_temp)
     if Constants.MODE=="unique":
         image_cov_temp.set_clim(-1,1)
         ax_cov_temp.set_title("Area Coverage Map (Unique Mode)")
@@ -34,10 +35,9 @@ def plot_coverage_temperature(swarm, START_TIME):
     
     ax_cov_temp.axis('off')
 
-    return fig_cov_temp, ax_cov_temp, image_cov_temp
+    return ax_cov_temp, image_cov_temp
 
-def plot_simulation_map(history_x,history_y):
-    fig_trajectories, ax_trajectories = plt.subplots()
+def plot_simulation_map(ax_trajectories, history_x,history_y):
     sc = [[] for i in range(Constants.NUM_UAVS)]
     for i in range(Constants.NUM_UAVS):
         sc[i] = ax_trajectories.scatter(history_x[i],history_y[i], s=1)
@@ -52,11 +52,11 @@ def plot_simulation_map(history_x,history_y):
     ax_trajectories.set_aspect('equal', adjustable='box')
 
     ax_trajectories.set_title("Trajectories plot")
-    ax_trajectories.set_xlabel("Distance ("+str(Constants.WIDTH)+" m)")
+    ax_trajectories.set_xlabel("Distance  ("+str(Constants.WIDTH)+" m)")
     ax_trajectories.set_xticks([])
     ax_trajectories.set_yticks([])
 
-    return fig_trajectories, ax_trajectories
+    return ax_trajectories
 
 def draw_obstacles(obstacles, ax_trajectories):
     for obs in obstacles:
@@ -83,3 +83,16 @@ def add_video(canvas_width, canvas_height,name):
         '-f', 'rawvideo',  '-i', '-', # tell ffmpeg to expect raw video from the pipe
         '-vcodec', 'mpeg4', outf) # output encoding
     return subprocess.Popen(cmdstring, stdin=subprocess.PIPE)
+
+
+def get_screen_dimensions():
+    root = tk.Tk()
+    root.update_idletasks()
+    root.attributes('-zoomed', True)
+    root.state('iconic')
+    geometry = root.winfo_geometry()
+    dpi = root.winfo_fpixels('1i')
+    root.destroy()
+    width = int(geometry.split('x')[0])
+    height = int(geometry.split('x')[1].split('+')[0])
+    return width/dpi, height/dpi

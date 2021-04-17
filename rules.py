@@ -243,7 +243,7 @@ def percentage_covered(swarm):
         for i in range(2,Constants.NUM_UAVS): aux_max = np.maximum(aux_max,swarm.coverage_map[i])
     else:
         aux_max = swarm.coverage_map[0]
-    return (np.count_nonzero(aux_max)/area)*100 
+    return aux_max, (np.count_nonzero(aux_max)/area)*100 
 
 
 
