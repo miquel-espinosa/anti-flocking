@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 import time
-import subprocess
 
 from constants import Constants
 from Swarm import Swarm, Obstacle
@@ -11,7 +10,6 @@ from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_si
 from functions import cost_fun
 
 arguments()
-
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
@@ -36,14 +34,15 @@ cost_function = [0]
 fig, ((ax_cov_temp, ax_trajectories), (ax_cost_graph, ax_cov_graph)) = plt.subplots(2, 2, gridspec_kw={'height_ratios': [3, 1]})
 fig.tight_layout()
 
-width, height = get_screen_dimensions()
-print(width,height)
-fig.set_size_inches(round(width-1),round(height))
+width_in, height_in = get_screen_dimensions()
+print("Inches:",width_in,height_in)
+fig.set_size_inches(round(width_in)-1,round(height_in)-1)
 
 # ======================================================
 #              ANIMATION GRAPHICS
 # ======================================================
 width, height = fig.canvas.get_width_height()
+print(width,height)
 if Constants.VIDEOS: video = add_video(width,height,"simulation")
 
 
@@ -53,7 +52,7 @@ if Constants.COVERAGE_TEMPERATURE:
 if Constants.TRAJECTORY_PLOT:
     ax_trajectories = plot_simulation_map(ax_trajectories, history_x,history_y)
 
-if Constants.CUMULATIVE_PERCENTAGE:    
+if Constants.CUMULATIVE_PERCENTAGE:
     ax_cov_graph.set_ylim(0,100)   
     ax_cov_graph.yaxis.tick_right()
     ax_cov_graph.set_title("Total Cumulative Area Coverage (%)")
@@ -155,6 +154,7 @@ while FINAL_CONDITION: # 99% coverage
 
     # FINAL CONDITION:
     if Constants.MODE=="unique": FINAL_CONDITION = (swarm.coverage_percentage < 95)
+    if iter==50: FINAL_CONDITION=False
 
 # Video thread write 
 if Constants.VIDEOS:

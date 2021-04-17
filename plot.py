@@ -77,11 +77,12 @@ def add_video(canvas_width, canvas_height,name):
     outf = str(name+'.mp4')
     # Open an ffmpeg process
     cmdstring = ('ffmpeg', 
-        '-y', '-r', '5', # overwrite, 30fps
+        '-y', '-r', '4', # overwrite, 30fps
         '-s', '%dx%d' % (canvas_width, canvas_height), # size of image string
         '-pix_fmt', 'argb', # format
         '-f', 'rawvideo',  '-i', '-', # tell ffmpeg to expect raw video from the pipe
-        '-vcodec', 'mpeg4', outf) # output encoding
+        '-vb', '20000k',
+        '-vcodec', 'libx264', outf) # output encoding
     return subprocess.Popen(cmdstring, stdin=subprocess.PIPE)
 
 
