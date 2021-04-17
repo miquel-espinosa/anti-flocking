@@ -2,7 +2,7 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
-import time, colorsys
+import time, colorsys, subprocess
 import numpy as np
 
 from constants import Constants
@@ -21,9 +21,18 @@ def trajectory_patch(history_x, history_y, agent, agent_colors):
 def plot_coverage_temperature(swarm, START_TIME):
     fig_cov_temp, ax_cov_temp = plt.subplots()
     image_cov_temp = ax_cov_temp.imshow(swarm.coverage_map[0], cmap=plt.cm.get_cmap("RdBu"), extent=(-3, 3, 3, -3), interpolation='bilinear')
-    if Constants.MODE=="unique": image_cov_temp.set_clim(-1,1)
-    if Constants.MODE=="continuous": image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
-    fig_cov_temp.colorbar(image_cov_temp)
+    
+    cbar = fig_cov_temp.colorbar(image_cov_temp)
+    if Constants.MODE=="unique":
+        image_cov_temp.set_clim(-1,1)
+        ax_cov_temp.set_title("Area Coverage Map (Unique Mode)")
+        cbar.set_label("Coverage state")
+    if Constants.MODE=="continuous":
+        image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
+        cbar.set_label("Time (seconds)")
+        ax_cov_temp.set_title("Area Coverage Map (Continuous Mode)")
+    
+    ax_cov_temp.axis('off')
 
     return fig_cov_temp, ax_cov_temp, image_cov_temp
 
@@ -38,9 +47,14 @@ def plot_simulation_map(history_x,history_y):
     ax_trajectories.add_patch(boundary)
     ax_trajectories.add_patch(geo_fence)
 
-    ax_trajectories.set_xlim(-10, Constants.WIDTH+10)   
-    ax_trajectories.set_ylim(-10, Constants.LENGTH+10)  
+    ax_trajectories.set_xlim(0, Constants.WIDTH)   
+    ax_trajectories.set_ylim(0, Constants.LENGTH)  
     ax_trajectories.set_aspect('equal', adjustable='box')
+
+    ax_trajectories.set_title("Trajectories plot")
+    ax_trajectories.set_xlabel("Distance ("+str(Constants.WIDTH)+" m)")
+    ax_trajectories.set_xticks([])
+    ax_trajectories.set_yticks([])
 
     return fig_trajectories, ax_trajectories
 
@@ -59,4 +73,13 @@ def assign_agent_colors():
         agent_colors.append((r, g, b))
     return agent_colors
 
-    
+def add_video(canvas_width, canvas_height,name):
+    outf = str(name+'.mp4')
+    # Open an ffmpeg process
+    cmdstring = ('ffmpeg', 
+        '-y', '-r', '5', # overwrite, 30fps
+        '-s', '%dx%d' % (canvas_width, canvas_height), # size of image string
+        '-pix_fmt', 'argb', # format
+        '-f', 'rawvideo',  '-i', '-', # tell ffmpeg to expect raw video from the pipe
+        '-vcodec', 'mpeg4', outf) # output encoding
+    return subprocess.Popen(cmdstring, stdin=subprocess.PIPE)

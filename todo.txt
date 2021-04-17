@@ -1,37 +1,17 @@
-- Add boundaries
-- Initialization positions of drones
-- Code refactoring
-
 TO DECIDE:
-
 - Which final values for constants
-- Area scanning:
-   · Whole coverage area? --> efficiency problems
-   · Only specified radius search?
- 	Default:
-		- Default goal to center?
-		- 
+
 
 EXTRAS:
 - Export to image or to animation
 - Fix updating matplotlib efficiency (port to PyGame, or other graphics)
 
 
-QUESTIONS: 
-  
-  1.- PROBLEMA DE COVERTURA UNICA? -> Una unica cobertura o tiene cubrir la parte más antigua ? 
-	
-	- Use time.monotonic() or use simple_coverage
-	       (surveillance)          (agricultural)
-
-  2.- TARGET GRID SELECTION -> Iterar sobre el mapa entero o solo sobre un radio (2*R_S) ?
-
-
-
 
 NEXT STEPS:
 
  - Faster simulation
+ - Initialization positions of drones
 
  - Optimizar aun más la selección del siguiente goal para evitar que cubra dos veces las mismas partes mmm
 

@@ -72,5 +72,10 @@ class Constants(object):
     TRAJECTORY_PLOT = True
     CUMULATIVE_PERCENTAGE = True
     COVERAGE_TEMPERATURE = True
+    COST = False
 
-    ADD_CIRCLES = False
+    VIDEOS = False
+
+    CIRCLE_SENSOR = True
+    CIRCLE_COMMUNICATION = False
+
