@@ -1,3 +1,4 @@
+from tkinter.constants import NUMERIC
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
@@ -9,7 +10,12 @@ from rules import arguments, agent_iteration, percentage_covered
 from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, assign_agent_colors, get_screen_dimensions
 from functions import cost_fun
 
+# Command line arguments processing
 arguments()
+
+# ======================================================
+#           SWARM AND OBSTACLES INITIALIZATION
+# ======================================================
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
@@ -26,7 +32,6 @@ history_percentage = [0]
 cost_function = [0]
 
 
-
 # ======================================================
 #              PLOTTING GRAPH AND OBSTACLES
 # ======================================================
@@ -35,17 +40,17 @@ fig, ((ax_cov_temp, ax_trajectories), (ax_cost_graph, ax_cov_graph)) = plt.subpl
 fig.tight_layout()
 
 width_in, height_in = get_screen_dimensions()
-print("Inches:",width_in,height_in)
 fig.set_size_inches(round(width_in)-1,round(height_in)-1)
 
-# ======================================================
-#              ANIMATION GRAPHICS
-# ======================================================
+# Set graphics window size fixed when recording video to avoid crashing
+if Constants.VIDEOS:
+    win = fig.canvas.window()
+    win.setFixedSize(win.size())
+
 width, height = fig.canvas.get_width_height()
-print(width,height)
-if Constants.VIDEOS: video = add_video(width,height,"simulation")
+if Constants.VIDEOS: video = add_video(width,height,Constants.RESULTS_DIR)
 
-
+# Create and init plots
 if Constants.COVERAGE_TEMPERATURE:
     ax_cov_temp, image_cov_temp = plot_coverage_temperature(fig, ax_cov_temp, swarm, START_TIME)
     
@@ -59,29 +64,30 @@ if Constants.CUMULATIVE_PERCENTAGE:
     ax_cov_graph.set_xlabel("Iterations")
     ax_cov_graph.set_ylabel("Area coverage (%)")
     
+if Constants.COST:
+    ax_cost_graph.set_title("Cost function")
+    ax_cost_graph.set_xlabel("Iterations")
+    ax_cost_graph.set_ylabel("Cost")
 
-if Constants.COST:    
-    fig_cost_graph, ax_cost_graph = plt.subplots()
 
 draw_obstacles(obstacles,ax_trajectories)
-
 agent_colors = assign_agent_colors()
-
 
 # Iteration counter
 iter = 0
 FINAL_CONDITION = True
 
 # MAIN EXECUTION LOOP
-while FINAL_CONDITION: # 99% coverage
+while FINAL_CONDITION: # 95% coverage or 400 max iterations = 
 
-    # if iter==20: Constants.NUM_UAVS=Constants.NUM_UAVS-1
+    if Constants.SIMULATE_FAILURES and Constants.NUM_UAVS > 1 and iter > 1:
+        # Kill UAV every 40 iterations
+        if iter%10==0:
+            Constants.NUM_UAVS = Constants.NUM_UAVS-1
+            ax_trajectories.scatter(*swarm.pos[Constants.NUM_UAVS],color='r',marker="x", zorder=2)
 
     iter = iter + 1 # Increment iteration counter
     swarm.neighbors = [[] for i in range(Constants.NUM_UAVS)] # Initialization of neighbors
-
-    if iter % 10 == 0: # Print current coverage status
-        print("Coverage: ",swarm.coverage_percentage,"%")
 
     # MAIN LOOP 2
     for agent in range(Constants.NUM_UAVS):
@@ -101,7 +107,7 @@ while FINAL_CONDITION: # 99% coverage
             # Add sensor and communication radius circles
             if Constants.CIRCLE_SENSOR:
                 ax_trajectories.add_patch(Circle(swarm.pos[agent],Constants.R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
-            if Constants.CIRCLE_COMMUNICATION:
+            if Constants.CIRCLE_COMMUNICATION and Constants.ALWAYS_COMMUNICATION==False:
                 ax_trajectories.add_patch(Circle(swarm.pos[agent],Constants.R_C,edgecolor="lavender",fill=False,linestyle="--"))
 
             # Plot goals as scatter points
@@ -121,7 +127,6 @@ while FINAL_CONDITION: # 99% coverage
         # CURRENT COVERAGE PERCENTAGE
         ax_cov_graph.annotate(" "+str(round(swarm.coverage_percentage,2))+"% ",
             xy=(0.86,0.9), xycoords='axes fraction',
-            textcoords='offset points',
             size=14,
             bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
 
@@ -132,42 +137,38 @@ while FINAL_CONDITION: # 99% coverage
     # PLOT AREA COVERAGE TEMPERATURE MAP
     if Constants.COVERAGE_TEMPERATURE:
         image_cov_temp.set_data(np.rot90(total_coverage_map))
-        if iter%10==0 and Constants.MODE=="continuous":
+        # if iter%10==0 and Constants.MODE=="continuous":
+        if Constants.MODE=="continuous":
             image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
 
-    # PLOT CURRENT ITERATION AND AGENTS POSITIONS
-    # if Constants.COVERAGE_TEMPERATURE: fig_cov_temp.canvas.draw_idle()
-    # if Constants.CUMULATIVE_PERCENTAGE: fig_cov_graph.canvas.draw_idle()
-    # if Constants.TRAJECTORY_PLOT: fig_trajectories.canvas.draw_idle()
+    # Update canvas with new changes
     fig.canvas.draw_idle()
     plt.pause(0.01)
 
-    
-    # extract the image as an ARGB string
-    # write to pipe
     if Constants.VIDEOS:
-        string = fig.canvas.tostring_argb()
-        video.stdin.write(string)
-        # for index in range(len(videos['figures'])):
-            # string = videos['figures'][index].canvas.tostring_argb()
-        #     videos['process'][index].stdin.write(string)
+        string = fig.canvas.tostring_argb() # Extract the image as an ARGB string
+        video.stdin.write(string) # Write to pipe
 
-    # FINAL CONDITION:
-    if Constants.MODE=="unique": FINAL_CONDITION = (swarm.coverage_percentage < 95)
-    if iter==50: FINAL_CONDITION=False
+    # FINAL CONDITION to exit loop
+    if Constants.MAX_ITERATIONS <= iter or Constants.MAX_COVERAGE <= swarm.coverage_percentage: 
+        FINAL_CONDITION = False
+
+
+fig.savefig(Constants.RESULTS_DIR, bbox_inches="tight")
 
 # Video thread write 
 if Constants.VIDEOS:
     video.communicate()
-    # for index in range(len(videos['figures'])):
-    #     videos['process'][index].communicate()
 
-print()
-print(" ============ AREA COVERAGE MISSION COMPLETED ============")
-print("       Total time elapsed: ",round(time.monotonic()-START_TIME,2)," seconds" )
-print("       Number of total iterations: ", iter)
-print("       Final coverage area: ",swarm.coverage_percentage,"%")
-print(" =========================================================")
-print()
-plt.waitforbuttonpress()
-time.sleep(5)
+
+file = open(Constants.RESULTS_DIR, "w")
+file.write("\n")
+file.write(" ============ AREA COVERAGE MISSION COMPLETED ============ \n")
+file.write(str("       (Exec time: "+str(round(time.monotonic()-START_TIME,2))+" s)\n"))
+file.write(str("       Number of total iterations: " + str(iter)+"\n"))
+file.write(str("       Final coverage area: " + str(swarm.coverage_percentage)+"%\n"))
+file.write(str("       Mission time: " + str(iter*Constants.TIME_STEP)+" s\n"))
+file.write(" =========================================================\n")
+file.write("\n")
+file.close()
+time.sleep(1)

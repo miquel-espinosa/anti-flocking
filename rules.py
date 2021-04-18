@@ -4,7 +4,9 @@ from functions import *
 
 
 def init(swarm,agent):
-    """ Init params function """
+    """
+        Init params function
+    """
     # Save previous goal
     swarm.prev_goal[agent] = swarm.goal[agent]
     # Init obstacle velocity
@@ -14,13 +16,12 @@ def init(swarm,agent):
 def get_neighbors(agent,swarm):
     """ 
         + COMPUTE NEIGHBORS
-        + SHARE MAPS
         + NEIGHBORS AVOIDANCE 
     """
     # Compute neighbors for each uav
     for agent2 in range(agent+1,Constants.NUM_UAVS):
         inter_dist = norm2(swarm.pos[agent],swarm.pos[agent2])
-        if inter_dist<Constants.R_C:
+        if inter_dist<Constants.R_C or Constants.ALWAYS_COMMUNICATION==True:
             swarm.neighbors[agent].append(agent2)
             swarm.neighbors[agent2].append(agent)
 
@@ -30,6 +31,9 @@ def get_neighbors(agent,swarm):
 
 
 def compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point):
+    """
+        Function to compute fitness given current scenario
+    """
     if Constants.MODE=="continuous": # surveillance mode (with time)
         # ( - I^p_i)
         # This will ensure that the agent prioritizes cells that have not been covered yet
@@ -49,8 +53,9 @@ def compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point):
         # final fitness calculation for point (x,y)
         fitness = time_diff*(Constants.RHO+(1-Constants.RHO)*math.exp(exponent))
     
-    """ Value 1: Not covered
-        Value 0: Already covered"""
+    """  Meaning of values in Unique Coverage Mode:
+         - Value 1: Not covered
+         - Value 0: Already covered"""
     if Constants.MODE=="unique": # no time consideration
         fitness = 1-swarm.coverage_map[agent][x][y]
         if Constants.GOAL_OPTIMIZATION:
@@ -64,6 +69,10 @@ def compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point):
     return fitness
 
 def decentering_velocity(swarm, agent):
+    """
+       + Compute decentering velocity with neighbors and COM (Center of Mass)
+       + Share local coverage map with neighbors
+    """
     num_neighbors = len(swarm.neighbors[agent])
     if num_neighbors > 0:
         mean = np.array(swarm.pos[agent])
@@ -236,12 +245,19 @@ def agent_iteration(START_TIME, swarm, agent):
 
 
 def percentage_covered(swarm):
-    """ Function to compute total percentage covered """
+    """ 
+        Function to:
+         - compute total percentage covered
+         - Return coverage map to draw in temperature plot
+    """
     area = Constants.WIDTH * Constants.LENGTH
     if Constants.NUM_UAVS >= 2:
         aux_max = np.maximum(swarm.coverage_map[0],swarm.coverage_map[1])
         for i in range(2,Constants.NUM_UAVS): aux_max = np.maximum(aux_max,swarm.coverage_map[i])
     else:
+        aux_max = swarm.coverage_map[0]
+
+    if Constants.COVERAGE_FIRST:
         aux_max = swarm.coverage_map[0]
     return aux_max, (np.count_nonzero(aux_max)/area)*100 
 
@@ -252,7 +268,7 @@ def arguments():
     # Options 
     options = "f:n:"
     # Long options 
-    long_options = ["file=", "numuavs=", "realtime=", "trajectory=", "cumulative=", "temperature="]
+    long_options = ["file=", "numuavs=", "plot=", "trajectory=", "cumulative=", "temperature="]
 
     try:
         opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
@@ -268,10 +284,10 @@ def arguments():
             Constants.RESULTS_DIR = arg
         elif opt in ("-n", "--numuavs"):
             Constants.NUM_UAVS = int(arg)
-        elif opt =="--realtime":
-            Constants.REAL_TIME = bool(arg)
+        elif opt =="--plot":
+            Constants.PLOTS = bool(arg)
 
-    if Constants.REAL_TIME==False: 
+    if Constants.PLOTS==False: 
         Constants.TRAJECTORY_PLOT = False
         Constants.CUMULATIVE_PERCENTAGE = False
         Constants.COVERAGE_TEMPERATURE = False

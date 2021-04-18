@@ -31,7 +31,10 @@ def plot_coverage_temperature(fig, ax_cov_temp, swarm, START_TIME):
     if Constants.MODE=="continuous":
         image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
         cbar.set_label("Time (seconds)")
-        ax_cov_temp.set_title("Area Coverage Map (Continuous Mode)")
+        if Constants.COVERAGE_FIRST:
+            ax_cov_temp.set_title("Area Coverage Map (Continuous Mode) - UAV 1 (red)")
+        else:
+            ax_cov_temp.set_title("Area Coverage Map (Continuous Mode) - All UAVs")
     
     ax_cov_temp.axis('off')
 
@@ -82,6 +85,7 @@ def add_video(canvas_width, canvas_height,name):
         '-pix_fmt', 'argb', # format
         '-f', 'rawvideo',  '-i', '-', # tell ffmpeg to expect raw video from the pipe
         '-vb', '20000k',
+        '-hide_banner','-loglevel','error',
         '-vcodec', 'libx264', outf) # output encoding
     return subprocess.Popen(cmdstring, stdin=subprocess.PIPE)
 

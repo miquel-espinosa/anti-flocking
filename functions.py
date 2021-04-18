@@ -29,10 +29,12 @@ def angle_between(vec1,vec2):
     divisor = norm1(vec1)*norm1(vec2)
     dot_product = np.dot(vec1,vec2)
     
-    # Ensure a value between -1 and 1 is passed to acos function
-    # if divisor == 0: return 0
+    # Ensure if divisor is zero to avoid division and return value close to zero
+    if divisor == 0: return 0 
     value = dot_product/divisor
-    if value > 1: value = 1
+
+    # Ensure a value between -1 and 1 is passed to acos function
+    if value > 1: value = 1 
     elif value < -1: value = -1
     
     # Final computation for angle between vectors
