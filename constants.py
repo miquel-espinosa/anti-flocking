@@ -51,13 +51,13 @@ class Constants(object):
          + unique: Unique coverage (no time consideration) E.g. agricultural coverage only once
          + continuous: Surveillance coverage (time consideration) E.g. surveillance of an industrial compound
     """
-    MODE = "continuous"
+    MODE = "unique"
 
     """ 
         Gives priority to those goals that will maximize coverage in a radius R_S.
         (It still needs a bit of readjusting with the fitness function)
     """
-    GOAL_OPTIMIZATION = True
+    GOAL_OPTIMIZATION = False
 
     """
         Minimum goal distance that must be ensured between agent goal and neighbor goal. Again, this avoids both UAVs moving towards same uncovered areas.
@@ -69,12 +69,12 @@ class Constants(object):
         Therefore, if enabled, all UAVs will have information of all other UAVs coverage areas.
         Result will be, obviously, more coherent and efficient; but less realistic 
     """
-    ALWAYS_COMMUNICATION = True
+    ALWAYS_COMMUNICATION = False
 
     """
         If enabled, drone failures will be simulated by decreasing the number of UAVs at defined iterations.
     """
-    SIMULATE_FAILURES = True
+    SIMULATE_FAILURES = False
 
     """
         Define the maximum iterations for covering area
@@ -103,14 +103,23 @@ class Constants(object):
     TRAJECTORY_PLOT = True
     CUMULATIVE_PERCENTAGE = True
     COVERAGE_TEMPERATURE = True
-    # This constant will plot the coverage map only for the first UAV (red trajectory), not the global map
-    COVERAGE_FIRST = True
     COST = True
 
+    # When enabled this constant, it will plot the coverage map only for the first UAV (red trajectory), not the global map
+    COVERAGE_FIRST = False
+
     # Will output a video of the simulation (needs ffmpeg installed)
-    VIDEOS = True
+    VIDEOS = False
 
     # Draw the Sensor Radius R_S circle in canvas
     CIRCLE_SENSOR = True
     # Draw the Communication Radius R_C circle in canvas
     CIRCLE_COMMUNICATION = False
+
+
+    # =======================================================================================================
+    #                                  INITIAL UAVS DISTRIBUTIONS
+    # =======================================================================================================
+
+    # UAV circle
+    # INIT_CIRCUMFERENCE = True

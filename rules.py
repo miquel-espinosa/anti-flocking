@@ -1,6 +1,9 @@
 import time, getopt, sys
+import numpy as np
+import math
 
-from functions import * 
+from functions import s, norm2, unitary_vector, angle_between, outside_area, radius_covered
+from constants import Constants
 
 
 def init(swarm,agent):
@@ -266,9 +269,9 @@ def percentage_covered(swarm):
 def arguments():
     # -------------------------- Arguments parsing -------------------------- #
     # Options 
-    options = "f:n:"
+    options = "f:n:m:p:"
     # Long options 
-    long_options = ["file=", "numuavs=", "plot=", "trajectory=", "cumulative=", "temperature="]
+    long_options = ["file=", "numuavs=", "mode=", "plot="]
 
     try:
         opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
@@ -284,7 +287,9 @@ def arguments():
             Constants.RESULTS_DIR = arg
         elif opt in ("-n", "--numuavs"):
             Constants.NUM_UAVS = int(arg)
-        elif opt =="--plot":
+        elif opt in ("-m", "--mode"):
+            Constants.MODE = str(arg)
+        elif opt in ("-p", "--plot"):
             Constants.PLOTS = bool(arg)
 
     if Constants.PLOTS==False: 

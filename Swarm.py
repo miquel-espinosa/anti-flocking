@@ -2,6 +2,7 @@
 import numpy as np
 import random
 
+from numpy.core.defchararray import array
 from constants import Constants
 
 
@@ -68,12 +69,15 @@ class Swarm(object):
 
     # TODO: Initial position of drones 
     #    - Not inside any obstacle
-    #    - Not overlapping sensor range ¿?
     # Should they all start in the same point?
     def init_positions(self, num, pos):
         # return np.random.rand(num,2)*(LENGTH/2)
         # Init all in the middle?
-        return np.full((num,2),Constants.LENGTH/2) 
+        positions = []
+        for _ in range(num):
+            positions.append((Constants.LENGTH/2+random.random(),Constants.LENGTH/2+random.random()))
+        return np.array(positions)
+        # return np.full((num,2),Constants.LENGTH/2)+random.random()
         # return np.random.rand(num,2)*WIDTH + 1 
 
 
