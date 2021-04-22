@@ -1,4 +1,3 @@
-from tkinter.constants import NUMERIC
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
@@ -11,6 +10,7 @@ from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_si
 from functions import cost_fun
 
 # Command line arguments processing
+# Files and directories creation
 arguments()
 
 # ======================================================
@@ -19,8 +19,8 @@ arguments()
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
-obstacles = [obs1, obs2]
-# obstacles = []
+# obstacles = [obs1, obs2]
+obstacles = []
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
@@ -43,12 +43,12 @@ width_in, height_in = get_screen_dimensions()
 fig.set_size_inches(round(width_in)-1,round(height_in)-1)
 
 # Set graphics window size fixed when recording video to avoid crashing
-if Constants.VIDEOS:
+if Constants.VIDEO:
     win = fig.canvas.window()
     win.setFixedSize(win.size())
 
 width, height = fig.canvas.get_width_height()
-if Constants.VIDEOS: video = add_video(width,height,Constants.RESULTS_DIR)
+if Constants.VIDEO: video = add_video(width,height,str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME))
 
 # Create and init plots
 if Constants.COVERAGE_TEMPERATURE:
@@ -82,7 +82,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
 
     if Constants.SIMULATE_FAILURES and Constants.NUM_UAVS > 1 and iter > 1:
         # Kill UAV every 40 iterations
-        if iter%10==0:
+        if iter%40==0:
             Constants.NUM_UAVS = Constants.NUM_UAVS-1
             ax_trajectories.scatter(*swarm.pos[Constants.NUM_UAVS],color='r',marker="x", zorder=2)
 
@@ -145,7 +145,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     fig.canvas.draw_idle()
     plt.pause(0.01)
 
-    if Constants.VIDEOS:
+    if Constants.VIDEO:
         string = fig.canvas.tostring_argb() # Extract the image as an ARGB string
         video.stdin.write(string) # Write to pipe
 
@@ -154,14 +154,14 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
         FINAL_CONDITION = False
 
 
-fig.savefig(Constants.RESULTS_DIR, bbox_inches="tight")
+fig.savefig(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME), bbox_inches="tight")
 
 # Video thread write 
-if Constants.VIDEOS:
+if Constants.VIDEO:
     video.communicate()
 
 
-file = open(Constants.RESULTS_DIR, "w")
+file = open(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME), "w")
 file.write("\n")
 file.write(" ============ AREA COVERAGE MISSION COMPLETED ============ \n")
 file.write(str("       (Exec time: "+str(round(time.monotonic()-START_TIME,2))+" s)\n"))

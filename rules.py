@@ -1,4 +1,4 @@
-import time, getopt, sys
+import time, getopt, sys, os
 import numpy as np
 import math
 
@@ -269,9 +269,9 @@ def percentage_covered(swarm):
 def arguments():
     # -------------------------- Arguments parsing -------------------------- #
     # Options 
-    options = "f:n:m:p:"
+    options = "d:f:n:m:p:"
     # Long options 
-    long_options = ["file=", "numuavs=", "mode=", "plot="]
+    long_options = ["dir=", "file=", "numuavs=", "mode=", "plot="]
 
     try:
         opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
@@ -283,8 +283,10 @@ def arguments():
         if opt == '-h':
             # print('main.py -f <outputfile> -h <help> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
             sys.exit()
+        elif opt in ("-d", "--dir"):
+            Constants.RESULTS_DIR = str(arg)
         elif opt in ("-f", "--file"):
-            Constants.RESULTS_DIR = arg
+            Constants.FILE_NAME = str(arg)
         elif opt in ("-n", "--numuavs"):
             Constants.NUM_UAVS = int(arg)
         elif opt in ("-m", "--mode"):
@@ -296,3 +298,10 @@ def arguments():
         Constants.TRAJECTORY_PLOT = False
         Constants.CUMULATIVE_PERCENTAGE = False
         Constants.COVERAGE_TEMPERATURE = False
+
+    # If folder doesn't exist, create folder
+    if not os.path.exists(Constants.RESULTS_DIR):
+        os.makedirs(Constants.RESULTS_DIR)
+    
+    if os.path.isfile(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME+".mp4")):
+        os.remove(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME+".mp4"))

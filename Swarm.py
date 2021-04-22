@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*- 
+from rules import init
 import numpy as np
-import random
+import random, math
 
 from numpy.core.defchararray import array
 from constants import Constants
@@ -11,12 +12,13 @@ class Swarm(object):
     """
         Function to initialize Swarm
             num: number of agents to initialize Swarm
+            obstacles: obstacle object to include in coverage initial map
     """
     def __init__(self, num, obstacles):
         
         # φ: Heading angle of UAVS
-        self.heading_angle = np.zeros(num) 
-        
+        self.heading_angle, self.pos = self.init_positions(num)
+
         # w: Control input for changing heading angle
         self.control_input = np.zeros(num)
 
@@ -47,9 +49,6 @@ class Swarm(object):
         # Array for storing neighbors indexes
         self.neighbors = [[] for i in range(num)]
         
-        # Initialize with random positions (not inside any obstacle)
-        self.pos = self.init_positions(num, self.coverage_map)
-        
         # (x,y) grid goal
         self.goal = np.zeros_like(self.pos)
         
@@ -67,18 +66,51 @@ class Swarm(object):
                 cov_map[row][obs.ld[1]:obs.ru[1]] = Constants.NEG_INF
         return np.array([cov_map]*num_uavs)
 
-    # TODO: Initial position of drones 
-    #    - Not inside any obstacle
-    # Should they all start in the same point?
-    def init_positions(self, num, pos):
+    def init_positions(self, num):
         # return np.random.rand(num,2)*(LENGTH/2)
         # Init all in the middle?
+        middle=[Constants.LENGTH/2,Constants.LENGTH/2]
         positions = []
-        for _ in range(num):
-            positions.append((Constants.LENGTH/2+random.random(),Constants.LENGTH/2+random.random()))
-        return np.array(positions)
-        # return np.full((num,2),Constants.LENGTH/2)+random.random()
-        # return np.random.rand(num,2)*WIDTH + 1 
+        angles = []
+
+        if Constants.INIT_CIRCUMFERENCE:
+            init_angle=math.floor((2*math.pi)/num) # in radians
+            angle=init_angle
+            for _ in range(num):
+                positions.append((middle[0]+math.cos(angle),middle[1]+math.sin(angle)))
+                angles.append(math.degrees(angle))
+                angle = angle+init_angle
+
+        if Constants.INIT_LINE_UP or Constants.INIT_LINE_DOWN or Constants.INIT_LINE_INTERCHANGED:
+            angle=90
+            for i in range(num):
+                positions.append((middle[0]+i,middle[1]))
+                if Constants.INIT_LINE_INTERCHANGED: angle = -angle
+                if Constants.INIT_LINE_UP: angle = 90
+                if Constants.INIT_LINE_DOWN: angle = -90
+                angles.append(angle)
+        
+        if Constants.INIT_RANDOM:
+            for _ in range(num):
+                positions.append((Constants.LENGTH/2+random.uniform(-1,1),Constants.LENGTH/2+random.uniform(-1,1)))
+                angles.append(360*random.random())
+
+        # if Constants.INIT_CORNER:
+        #     x=1
+        #     c=Constants.R_S
+        #     for i in range(num):
+        #         # positions.append((Constants.R_S+random.uniform(-1,1),Constants.R_S+random.uniform(-1,1)))
+        #         if x == 1:
+        #             positions.append((Constants.R_S,c))
+        #         else:
+        #             positions.append((c,Constants.R_S))
+        #             c=c+Constants.R_S
+        #         angles.append(200)
+        #         x=-x
+        # print(positions)
+        # print(angles)
+
+        return np.array(angles), np.array(positions)
 
 
 
