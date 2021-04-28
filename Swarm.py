@@ -56,6 +56,9 @@ class Swarm(object):
         # Acumulated percentage coverage
         self.coverage_percentage = 0
 
+        # Instantaneous coverage map
+        self.instantaneous_coverage_map = np.zeros((Constants.WIDTH, Constants.LENGTH))
+
     # Mark with -1 all cells with obstacle inside
     def init_coverage_map(self, num_uavs, obstacles):
         cov_map = np.zeros((Constants.WIDTH,Constants.LENGTH)) 

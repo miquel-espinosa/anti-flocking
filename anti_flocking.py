@@ -89,6 +89,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
 
     iter = iter + 1 # Increment iteration counter
     swarm.neighbors = [[] for i in range(Constants.NUM_UAVS)] # Initialization of neighbors
+    swarm.instantaneous_coverage_map = np.zeros((Constants.WIDTH, Constants.LENGTH)) # Initialize instantaneous coverage map
 
     # MAIN LOOP 2
     for agent in range(Constants.NUM_UAVS):
@@ -118,7 +119,11 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     total_coverage_map, swarm.coverage_percentage = percentage_covered(swarm)
 
     # COMPUTE COST FUNCTION VALUE
-    cost_function.append(cost_fun(swarm.coverage_percentage/100,iter))
+    # cost_function.append(cost_fun(swarm.coverage_percentage/100,iter))
+    cost_function.append(cost_fun(np.count_nonzero(swarm.instantaneous_coverage_map==1)/(Constants.WIDTH*Constants.LENGTH),iter))
+    # aux = np.count_nonzero(swarm.instantaneous_coverage_map==1)
+    # cost_function.append(aux)
+    # print(aux)
 
     # PLOT COVERAGE PERCENTAGE GRAPH
     if Constants.CUMULATIVE_PERCENTAGE:

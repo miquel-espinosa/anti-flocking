@@ -133,6 +133,8 @@ def agent_iteration(START_TIME, swarm, agent):
             elif dist_to_point < Constants.R_S: 
                 if Constants.MODE=="continuous": swarm.coverage_map[agent][x][y] = time.monotonic()-START_TIME
                 if Constants.MODE=="unique": swarm.coverage_map[agent][x][y] = 1
+                if swarm.instantaneous_coverage_map[x][y] == 0:
+                    swarm.instantaneous_coverage_map[x][y] = 1
                 
             # ---------- TARGET GRID SELECTION ----------
             # If not an obstacle and not inside radius, compute heuristics

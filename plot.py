@@ -5,7 +5,6 @@ from matplotlib.patches import Rectangle
 import time, colorsys, subprocess
 import numpy as np
 import tkinter as tk
-from platform import system
 
 from constants import Constants
 
