@@ -4,7 +4,8 @@ from matplotlib.patches import Circle
 import time
 
 from constants import Constants
-from Swarm import Swarm, Obstacle
+from Swarm import Swarm
+from Obstacle import Obstacle
 from rules import arguments, agent_iteration, percentage_covered
 from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, assign_agent_colors, get_screen_dimensions
 from functions import cost_fun

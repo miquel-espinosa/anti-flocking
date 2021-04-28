@@ -74,7 +74,7 @@ class Constants(object):
     SIMULATE_FAILURES = False
 
     # ---------------- FINAL CONDITION ----------------
-    MAX_ITERATIONS = 40    # Define the maximum iterations for covering area
+    MAX_ITERATIONS = 400    # Define the maximum iterations for covering area
     MAX_COVERAGE = 95       # Define the maximum coverage percentage
     
 
@@ -109,10 +109,10 @@ class Constants(object):
     # =======================================================================================================
 
     # --> Only one must be enabled at the same time
-    INIT_CIRCUMFERENCE = False     # UAVs circle init at center
+    INIT_CIRCUMFERENCE = True     # UAVs circle init at center
     INIT_RANDOM = False            # UAVs random init at center
     INIT_LINE_UP = False           # UAVs init with upwards pointing line formation
-    INIT_LINE_DOWN = True          # UAVs init with downwards pointing line formation
+    INIT_LINE_DOWN = False          # UAVs init with downwards pointing line formation
     INIT_LINE_INTERCHANGED = False # UAVs init with interchanged line formation
     
     # TODO: Not working

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*- 
-from rules import init
 import numpy as np
 import random, math
 
-from numpy.core.defchararray import array
 from constants import Constants
 
 
@@ -112,12 +110,4 @@ class Swarm(object):
 
         return np.array(angles), np.array(positions)
 
-
-
-class Obstacle(object):
-
-    def __init__(self,ld,ru):
-        self.ld = ld # Left-down coordinates
-        self.ru = ru # Right-up coordinates
-                
 
