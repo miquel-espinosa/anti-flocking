@@ -75,10 +75,10 @@ class Swarm(object):
         angles = []
 
         if Constants.INIT_CIRCUMFERENCE:
-            init_angle=math.floor((2*math.pi)/num) # in radians
+            init_angle=(2*math.pi)/num # in radians
             angle=init_angle
             for _ in range(num):
-                positions.append((middle[0]+math.cos(angle),middle[1]+math.sin(angle)))
+                positions.append((round(middle[0]+math.cos(angle),2),round(middle[1]+math.sin(angle),2)))
                 angles.append(math.degrees(angle))
                 angle = angle+init_angle
 
