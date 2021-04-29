@@ -29,7 +29,7 @@ def angle_between(vec1,vec2):
     divisor = norm1(vec1)*norm1(vec2)
     dot_product = np.dot(vec1,vec2)
     
-    # Ensure if divisor is zero to avoid division and return value close to zero
+    # Ensure divisor is not zero to avoid error in division
     if divisor == 0: return 0 
     value = dot_product/divisor
 
