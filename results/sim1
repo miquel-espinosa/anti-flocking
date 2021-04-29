@@ -1,8 +1,9 @@
 
  ============ AREA COVERAGE MISSION COMPLETED ============ 
-       (Exec time: 27.67 s)
-       Number of total iterations: 40
-       Final coverage area: 22.6%
-       Mission time: 8.0 s
+       (Exec time: 14.18 s)
+       Number of total iterations: 20
+       Final coverage area: 21.24%
+       Average instantaneous coverage area: 9.53%
+       Mission time: 4.0 s
  =========================================================
 

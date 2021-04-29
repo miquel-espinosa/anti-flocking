@@ -8,7 +8,6 @@ from Swarm import Swarm
 from Obstacle import Obstacle
 from rules import arguments, agent_iteration, percentage_covered
 from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, assign_agent_colors, get_screen_dimensions
-from functions import cost_fun
 
 # Command line arguments processing
 # Files and directories creation
@@ -30,14 +29,14 @@ swarm = Swarm(Constants.NUM_UAVS, obstacles)
 history_x = [[swarm.pos[i][0]] for i in range(Constants.NUM_UAVS)]
 history_y = [[swarm.pos[i][1]] for i in range(Constants.NUM_UAVS)]
 history_percentage = [0]
-cost_function = [0]
+instant_coverage = [0]
 
 
 # ======================================================
 #              PLOTTING GRAPH AND OBSTACLES
 # ======================================================
 
-fig, ((ax_cov_temp, ax_trajectories), (ax_cost_graph, ax_cov_graph)) = plt.subplots(2, 2, gridspec_kw={'height_ratios': [3, 1]})
+fig, ((ax_cov_temp, ax_trajectories), (ax_inst_graph, ax_cov_graph)) = plt.subplots(2, 2, gridspec_kw={'height_ratios': [3, 1]})
 fig.tight_layout()
 
 width_in, height_in = get_screen_dimensions()
@@ -65,10 +64,11 @@ if Constants.CUMULATIVE_PERCENTAGE:
     ax_cov_graph.set_xlabel("Iterations")
     ax_cov_graph.set_ylabel("Area coverage (%)")
     
-if Constants.COST:
-    ax_cost_graph.set_title("Cost function")
-    ax_cost_graph.set_xlabel("Iterations")
-    ax_cost_graph.set_ylabel("Cost")
+if Constants.INSTANTANEOUS_PERCENTAGE:
+    # ax_inst_graph.set_ylim(0,100)   
+    ax_inst_graph.set_title("Instantaneous Area Coverage (%) for whole UAV Swarm")
+    ax_inst_graph.set_xlabel("Iterations")
+    ax_inst_graph.set_ylabel("Instantaneous Area Coverage")
 
 
 draw_obstacles(obstacles,ax_trajectories)
@@ -118,12 +118,9 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     # COMPUTE OVERALL COVERAGE PERCENTAGE 
     total_coverage_map, swarm.coverage_percentage = percentage_covered(swarm)
 
-    # COMPUTE COST FUNCTION VALUE
-    # cost_function.append(cost_fun(swarm.coverage_percentage/100,iter))
-    cost_function.append(cost_fun(np.count_nonzero(swarm.instantaneous_coverage_map==1)/(Constants.WIDTH*Constants.LENGTH),iter))
-    # aux = np.count_nonzero(swarm.instantaneous_coverage_map==1)
-    # cost_function.append(aux)
-    # print(aux)
+    # COMPUTE INSTANTANEOUS COVERAGE
+    instant_coverage_percentage = (np.count_nonzero(swarm.instantaneous_coverage_map==1)/(Constants.WIDTH*Constants.LENGTH))*100
+    instant_coverage.append(instant_coverage_percentage)
 
     # PLOT COVERAGE PERCENTAGE GRAPH
     if Constants.CUMULATIVE_PERCENTAGE:
@@ -136,9 +133,14 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
             size=14,
             bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
 
-    # PLOT COST FUNCTION GRAPH
-    if Constants.COST:
-        ax_cost_graph.plot(cost_function, color="b")
+    # PLOT INSTANTANEOUS COVERAGE (%)
+    if Constants.INSTANTANEOUS_PERCENTAGE:
+        ax_inst_graph.plot(instant_coverage, color="b")
+
+        ax_inst_graph.annotate(" "+str(round(instant_coverage_percentage,2))+"% ",
+            xy=(0.86,0.1), xycoords='axes fraction',
+            size=14,
+            bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
 
     # PLOT AREA COVERAGE TEMPERATURE MAP
     if Constants.COVERAGE_TEMPERATURE:
@@ -172,7 +174,8 @@ file.write("\n")
 file.write(" ============ AREA COVERAGE MISSION COMPLETED ============ \n")
 file.write(str("       (Exec time: "+str(round(time.monotonic()-START_TIME,2))+" s)\n"))
 file.write(str("       Number of total iterations: " + str(iter)+"\n"))
-file.write(str("       Final coverage area: " + str(swarm.coverage_percentage)+"%\n"))
+file.write(str("       Final coverage area: " + str(round(swarm.coverage_percentage,2))+"%\n"))
+file.write(str("       Average instantaneous coverage area: " + str(round(sum(instant_coverage)/len(instant_coverage),2))+"%\n"))
 file.write(str("       Mission time: " + str(iter*Constants.TIME_STEP)+" s\n"))
 file.write(" =========================================================\n")
 file.write("\n")

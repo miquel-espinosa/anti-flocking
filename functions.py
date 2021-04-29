@@ -62,6 +62,3 @@ def radius_covered(cov_map,pos):
             if cov_map[x][y]!=0:
                 total_covered = total_covered + 1
     return total_covered
-
-def cost_fun(coverage_percentage, iteration):
-    return math.exp(coverage_percentage+iteration)/iteration

@@ -74,7 +74,7 @@ class Constants(object):
     SIMULATE_FAILURES = False
 
     # ---------------- FINAL CONDITION ----------------
-    MAX_ITERATIONS = 400    # Define the maximum iterations for covering area
+    MAX_ITERATIONS = 20    # Define the maximum iterations for covering area
     MAX_COVERAGE = 95       # Define the maximum coverage percentage
     
 
@@ -93,7 +93,7 @@ class Constants(object):
     TRAJECTORY_PLOT = True
     CUMULATIVE_PERCENTAGE = True
     COVERAGE_TEMPERATURE = True
-    COST = True
+    INSTANTANEOUS_PERCENTAGE = True
 
     COVERAGE_FIRST = False  # True: Plots the coverage map only for the first UAV (red trajectory)
                             # False: Plots global temperature map
