@@ -46,23 +46,18 @@ class Constants(object):
     # =======================================================================================================
 
     TIME_STEP = 0.2 # In seconds
-    NEG_INF = -40   # Negative infinite for marking obstacles in coverage map
-
+    OBSTACLE_VALUE = -40   # Specific value for marking obstacles in coverage map
+    
     
     # COVERAGE MODE
     #  + unique: Unique coverage (no time consideration) E.g. agricultural coverage only once
     #  + continuous: Surveillance coverage (time consideration) E.g. surveillance of an industrial compound
     MODE = "unique"
      
-    # Gives priority to those goals that will maximize coverage in a radius R_S.
-    # (It still needs a bit of readjusting with the fitness function)
-    GOAL_OPTIMIZATION = True
-
     
     # Minimum goal distance that must be ensured between agent goal and neighbor goal.
     # Again, this avoids both UAVs moving towards same uncovered areas.
-    MIN_GOAL_DIST = 2*R_S
-
+    MIN_GOAL_DIST = R_S
     
     # This parameter will disable the maximum communication radius range. 
     # Therefore, if enabled, all UAVs will have information of all other UAVs coverage areas.
@@ -74,7 +69,7 @@ class Constants(object):
     SIMULATE_FAILURES = False
 
     # ---------------- FINAL CONDITION ----------------
-    MAX_ITERATIONS = 20    # Define the maximum iterations for covering area
+    MAX_ITERATIONS = 10000    # Define the maximum iterations for covering area
     MAX_COVERAGE = 95       # Define the maximum coverage percentage
     
 
@@ -91,16 +86,16 @@ class Constants(object):
     # If set to false will leave in blank corresponding plot 
     # (--> Disable for rapid testing: disabling plotting improves performance)
     TRAJECTORY_PLOT = True
-    CUMULATIVE_PERCENTAGE = True
-    COVERAGE_TEMPERATURE = True
-    INSTANTANEOUS_PERCENTAGE = True
+    CUMULATIVE_PERCENTAGE = False
+    COVERAGE_TEMPERATURE = False
+    INSTANTANEOUS_PERCENTAGE = False
 
     COVERAGE_FIRST = False  # True: Plots the coverage map only for the first UAV (red trajectory)
                             # False: Plots global temperature map
 
     VIDEO = False                   # Will output a video of the simulation (needs ffmpeg installed)
     
-    CIRCLE_SENSOR = True            # Draw the Sensor Radius R_S circle in canvas
+    CIRCLE_SENSOR = False            # Draw the Sensor Radius R_S circle in canvas
     CIRCLE_COMMUNICATION = False    # Draw the Communication Radius R_C circle in canvas
 
 

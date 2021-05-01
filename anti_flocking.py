@@ -19,8 +19,8 @@ arguments()
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
-# obstacles = [obs1, obs2]
-obstacles = []
+obstacles = [obs1, obs2]
+# obstacles = []
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
@@ -147,7 +147,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
         image_cov_temp.set_data(np.rot90(total_coverage_map))
         # if iter%10==0 and Constants.MODE=="continuous":
         if Constants.MODE=="continuous":
-            image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
+            image_cov_temp.set_clim(Constants.OBSTACLE_VALUE,time.monotonic()-START_TIME)
 
     # Update canvas with new changes
     fig.canvas.draw_idle()
@@ -161,6 +161,8 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     if Constants.MAX_ITERATIONS <= iter or Constants.MAX_COVERAGE <= swarm.coverage_percentage: 
         FINAL_CONDITION = False
 
+# Draw last sensor circle for final picture
+ax_trajectories.add_patch(Circle(swarm.pos[agent],Constants.R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
 
 fig.savefig(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME), bbox_inches="tight")
 

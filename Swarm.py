@@ -64,7 +64,7 @@ class Swarm(object):
         cov_map = np.zeros((Constants.WIDTH,Constants.LENGTH)) 
         for obs in obstacles:
             for row in range(obs.ld[0],obs.ru[0]):
-                cov_map[row][obs.ld[1]:obs.ru[1]] = Constants.NEG_INF
+                cov_map[row][obs.ld[1]:obs.ru[1]] = Constants.OBSTACLE_VALUE
         return np.array([cov_map]*num_uavs)
 
     def init_positions(self, num):

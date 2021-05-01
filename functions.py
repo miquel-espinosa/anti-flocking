@@ -46,19 +46,3 @@ def outside_area(x,y):
         (x>Constants.LENGTH-Constants.GEO_FENCE_WIDTH) or (y>Constants.WIDTH-Constants.GEO_FENCE_WIDTH):
         return True
     return False
-
-def radius_covered(cov_map,pos):
-    """ Function to check in a square of R_S*R_S the number of already covered cells """
-    x0 = int(np.floor(pos[0]-Constants.R_S))
-    y0 = int(np.floor(pos[1]-Constants.R_S))
-    x0_lower = max(x0,0)
-    y0_lower = max(y0,0)
-    x_upper = min(x0+2*Constants.R_S,Constants.WIDTH) 
-    y_upper = min(y0+2*Constants.R_S,Constants.LENGTH)
-
-    total_covered=0
-    for x in range(x0_lower,x_upper):
-        for y in range(y0_lower,y_upper):
-            if cov_map[x][y]!=0:
-                total_covered = total_covered + 1
-    return total_covered

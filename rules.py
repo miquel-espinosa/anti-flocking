@@ -2,7 +2,7 @@ import time, getopt, sys, os
 import numpy as np
 import math
 
-from functions import s, norm2, unitary_vector, angle_between, outside_area, radius_covered
+from functions import s, norm2, unitary_vector, angle_between, outside_area
 from constants import Constants
 
 
@@ -38,38 +38,29 @@ def compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point):
         Function to compute fitness given current scenario
     """
     if Constants.MODE=="continuous": # surveillance mode (with time)
-        # ( - I^p_i)
-        # This will ensure that the agent prioritizes cells that have not been covered yet
-        if swarm.coverage_map[agent][x][y] == 0 and Constants.GOAL_OPTIMIZATION:
-            time_diff = (time.monotonic()-START_TIME)*100
-            if Constants.GOAL_OPTIMIZATION:
-                # Indicates the number of cells withing R_S radius of selected point that have already been covered in the past
-                adjacent_coverage=radius_covered(swarm.coverage_map[agent],point)
-                # Penalize points with neighbors already covered
-                time_diff = time_diff - adjacent_coverage
-        else:
-            time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
+        time_diff = time.monotonic()-START_TIME-swarm.coverage_map[agent][x][y] 
         # distance to previous goal
         dist_to_prev_goal = norm2(np.array([x,y]),swarm.prev_goal[agent])
         # exponent expression
         exponent = -Constants.ALPHA*dist_to_point-Constants.BETA*dist_to_prev_goal
         # final fitness calculation for point (x,y)
         fitness = time_diff*(Constants.RHO+(1-Constants.RHO)*math.exp(exponent))
+        return fitness
     
     """  Meaning of values in Unique Coverage Mode:
          - Value 1: Not covered
          - Value 0: Already covered"""
     if Constants.MODE=="unique": # no time consideration
-        fitness = 1-swarm.coverage_map[agent][x][y]
-        if Constants.GOAL_OPTIMIZATION:
-            # Indicates the number of cells withing R_S radius of selected point that have already been covered in the past
-            adjacent_coverage=radius_covered(swarm.coverage_map[agent],point)
-            # To avoid division by zero
-            if adjacent_coverage==0: adjacent_coverage = 1
-            # Penalize points with neighbors already covered
-            fitness = fitness + (1/adjacent_coverage)*10
-
-    return fitness
+        if swarm.coverage_map[agent][x][y] == 1:
+            return 0
+        else:
+            if dist_to_point > 2*Constants.R_S:
+                return 1
+            elif dist_to_point < 2*Constants.R_S:
+                return 2
+            elif dist_to_point < 1.5*Constants.R_S:
+                return 3
+    return 0
 
 def decentering_velocity(swarm, agent):
     """
@@ -123,9 +114,9 @@ def agent_iteration(START_TIME, swarm, agent):
             dist_to_point = norm2(swarm.pos[agent],point) # distance agent <--> grid_cell
 
             # ---------- OBSTACLE AVOIDANCE ----------
-            # Obstacles are marked with NEG_INF in coverage map
+            # Obstacles are marked with OBSTACLE_VALUE in coverage map
             # If obstacles are inside D_0 radius, repulsion
-            if swarm.coverage_map[agent][x][y] == Constants.NEG_INF: 
+            if swarm.coverage_map[agent][x][y] == Constants.OBSTACLE_VALUE: 
                 swarm.vel_obs[agent] += (s(dist_to_point,Constants.D_O) * unitary_vector(point,swarm.pos[agent]))
                 
             # ---------- UPDATE COVERAGE MAP ----------
@@ -140,7 +131,7 @@ def agent_iteration(START_TIME, swarm, agent):
             # If not an obstacle and not inside radius, compute heuristics
             # We will perform target grid selection for those cells
             # that are:  R_S < cells < 2*R_S  
-            elif (swarm.coverage_map[agent][x][y] != Constants.NEG_INF) and (not outside_area(x,y)):
+            elif (swarm.coverage_map[agent][x][y] != Constants.OBSTACLE_VALUE) and (not outside_area(x,y)):
 
                 # Compute closest neighbor to this point
                 closest = True
@@ -278,12 +269,14 @@ def arguments():
     try:
         opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
     except getopt.GetoptError:
-        # print('main.py -f <outputfile> -r <robot> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
+        print()
+        print('  UAVNET USAGE: anti_flocking.py -d <directory> -f <file_name> -n <num_uavs> -m <coverage_mode> -p <enable_plot>')
+        print()
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            # print('main.py -f <outputfile> -h <help> -p <population_size> -t <tournament_size> -m <mutation_size> -e <pure_elitism>')
+            print('anti_flocking.py -d <directory> -f <file_name> -n <num_uavs> -m <coverage_mode> -p <enable_plot>')
             sys.exit()
         elif opt in ("-d", "--dir"):
             Constants.RESULTS_DIR = str(arg)

@@ -28,7 +28,7 @@ def plot_coverage_temperature(fig, ax_cov_temp, swarm, START_TIME):
         ax_cov_temp.set_title("Area Coverage Map (Unique Mode)")
         cbar.set_label("Coverage state")
     if Constants.MODE=="continuous":
-        image_cov_temp.set_clim(Constants.NEG_INF,time.monotonic()-START_TIME)
+        image_cov_temp.set_clim(Constants.OBSTACLE_VALUE,time.monotonic()-START_TIME)
         cbar.set_label("Time (seconds)")
         if Constants.COVERAGE_FIRST:
             ax_cov_temp.set_title("Area Coverage Map (Continuous Mode) - UAV 1 (red)")
