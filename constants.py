@@ -62,7 +62,7 @@ class Constants(object):
     # This parameter will disable the maximum communication radius range. 
     # Therefore, if enabled, all UAVs will have information of all other UAVs coverage areas.
     # Result will be, obviously, more coherent and efficient; but less realistic 
-    ALWAYS_COMMUNICATION = False
+    ALWAYS_COMMUNICATION = True
 
 
     # If enabled, drone failures will be simulated by decreasing the number of UAVs at defined iterations.
@@ -86,9 +86,9 @@ class Constants(object):
     # If set to false will leave in blank corresponding plot 
     # (--> Disable for rapid testing: disabling plotting improves performance)
     TRAJECTORY_PLOT = True
-    CUMULATIVE_PERCENTAGE = False
-    COVERAGE_TEMPERATURE = False
-    INSTANTANEOUS_PERCENTAGE = False
+    CUMULATIVE_PERCENTAGE = True
+    COVERAGE_TEMPERATURE = True
+    INSTANTANEOUS_PERCENTAGE = True
 
     COVERAGE_FIRST = False  # True: Plots the coverage map only for the first UAV (red trajectory)
                             # False: Plots global temperature map

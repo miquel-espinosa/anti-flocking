@@ -24,7 +24,7 @@ def get_neighbors(agent,swarm):
     # Compute neighbors for each uav
     for agent2 in range(agent+1,Constants.NUM_UAVS):
         inter_dist = norm2(swarm.pos[agent],swarm.pos[agent2])
-        if inter_dist<Constants.R_C or Constants.ALWAYS_COMMUNICATION==True:
+        if inter_dist<Constants.R_C:
             swarm.neighbors[agent].append(agent2)
             swarm.neighbors[agent2].append(agent)
 
@@ -67,7 +67,10 @@ def decentering_velocity(swarm, agent):
        + Compute decentering velocity with neighbors and COM (Center of Mass)
        + Share local coverage map with neighbors
     """
+    if Constants.ALWAYS_COMMUNICATION:
+        swarm.neighbors[agent] = list(range(Constants.NUM_UAVS))
     num_neighbors = len(swarm.neighbors[agent])
+    
     if num_neighbors > 0:
         mean = np.array(swarm.pos[agent])
         for neig in swarm.neighbors[agent]:
