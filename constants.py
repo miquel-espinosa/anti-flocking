@@ -62,7 +62,7 @@ class Constants(object):
     # This parameter will disable the maximum communication radius range. 
     # Therefore, if enabled, all UAVs will have information of all other UAVs coverage areas.
     # Result will be, obviously, more coherent and efficient; but less realistic 
-    ALWAYS_COMMUNICATION = True
+    ALWAYS_COMMUNICATION = False
 
 
     # If enabled, drone failures will be simulated by decreasing the number of UAVs at defined iterations.
@@ -104,8 +104,8 @@ class Constants(object):
     # =======================================================================================================
 
     # --> Only one must be enabled at the same time
-    INIT_CIRCUMFERENCE = True     # UAVs circle init at center
-    INIT_RANDOM = False            # UAVs random init at center
+    INIT_CIRCUMFERENCE = False     # UAVs circle init at center
+    INIT_RANDOM = True            # UAVs random init at center
     INIT_LINE_UP = False           # UAVs init with upwards pointing line formation
     INIT_LINE_DOWN = False          # UAVs init with downwards pointing line formation
     INIT_LINE_INTERCHANGED = False # UAVs init with interchanged line formation

@@ -1,4 +1,4 @@
-import time, getopt, sys, os
+import time, os, argparse
 import numpy as np
 import math
 
@@ -56,7 +56,7 @@ def compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point):
         else:
             if dist_to_point > 2*Constants.R_S:
                 return 1
-            elif dist_to_point < 2*Constants.R_S:
+            elif dist_to_point > 1.5*Constants.R_S:
                 return 2
             elif dist_to_point < 1.5*Constants.R_S:
                 return 3
@@ -261,43 +261,25 @@ def percentage_covered(swarm):
     return aux_max, (np.count_nonzero(aux_max)/area)*100 
 
 
-
 def arguments():
-    # -------------------------- Arguments parsing -------------------------- #
-    # Options 
-    options = "d:f:n:m:p:"
-    # Long options 
-    long_options = ["dir=", "file=", "numuavs=", "mode=", "plot="]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--noplot', dest='noplot', action='store_true', help="Disable real-time plotting")
+    parser.add_argument('--video', dest='video', action='store_true', help="Save simulation into .mp4 video file")
+    parser.add_argument('--alwayscomm', dest='alwayscomm', action='store_true', help="Always communication between UAVs")
+    parser.add_argument('-n', action='store', type=int, help="Number of UAVs")
+    parser.add_argument('-d', action='store', help="Directory to store results")
+    parser.add_argument('-f', action='store', help="File name for results")
+    parser.add_argument('-m', action='store', help="Execution mode", choices=["unique","continuous"])
+    args = parser.parse_args()
+    if args.noplot:
+        Constants.PLOTS = False
+    if args.video: Constants.VIDEO = True
+    if args.alwayscomm: Constants.ALWAYS_COMMUNICATION = True
+    if args.n: Constants.NUM_UAVS = args.n
+    if args.d: Constants.RESULTS_DIR = args.d
+    if args.f: Constants.FILE_NAME = args.f
+    if args.m: Constants.MODE = args.m
 
-    try:
-        opts, _ = getopt.getopt(sys.argv[1:],options,long_options)
-    except getopt.GetoptError:
-        print()
-        print('  UAVNET USAGE: anti_flocking.py -d <directory> -f <file_name> -n <num_uavs> -m <coverage_mode> -p <enable_plot>')
-        print()
-        sys.exit(2)
-
-    for opt, arg in opts:
-        if opt == '-h':
-            print('anti_flocking.py -d <directory> -f <file_name> -n <num_uavs> -m <coverage_mode> -p <enable_plot>')
-            sys.exit()
-        elif opt in ("-d", "--dir"):
-            Constants.RESULTS_DIR = str(arg)
-        elif opt in ("-f", "--file"):
-            Constants.FILE_NAME = str(arg)
-        elif opt in ("-n", "--numuavs"):
-            Constants.NUM_UAVS = int(arg)
-        elif opt in ("-m", "--mode"):
-            Constants.MODE = str(arg)
-        elif opt in ("-p", "--plot"):
-            Constants.PLOTS = bool(arg)
-
-    if Constants.PLOTS==False: 
-        Constants.TRAJECTORY_PLOT = False
-        Constants.CUMULATIVE_PERCENTAGE = False
-        Constants.COVERAGE_TEMPERATURE = False
-
-    # If folder doesn't exist, create folder
     if not os.path.exists(Constants.RESULTS_DIR):
         os.makedirs(Constants.RESULTS_DIR)
     

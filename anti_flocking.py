@@ -125,16 +125,17 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     # PLOT COVERAGE PERCENTAGE GRAPH
     if Constants.CUMULATIVE_PERCENTAGE:
         history_percentage.append(swarm.coverage_percentage)
-        ax_cov_graph.plot(history_percentage, color="b")
+        if Constants.PLOTS:
+            ax_cov_graph.plot(history_percentage, color="b")
 
-        # CURRENT COVERAGE PERCENTAGE
-        ax_cov_graph.annotate(" "+str(round(swarm.coverage_percentage,2))+"% ",
-            xy=(0.86,0.9), xycoords='axes fraction',
-            size=14,
-            bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
+            # CURRENT COVERAGE PERCENTAGE
+            ax_cov_graph.annotate(" "+str(round(swarm.coverage_percentage,2))+"% ",
+                xy=(0.86,0.9), xycoords='axes fraction',
+                size=14,
+                bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
 
     # PLOT INSTANTANEOUS COVERAGE (%)
-    if Constants.INSTANTANEOUS_PERCENTAGE:
+    if Constants.INSTANTANEOUS_PERCENTAGE and Constants.PLOTS:
         ax_inst_graph.plot(instant_coverage, color="b")
 
         ax_inst_graph.annotate(" "+str(round(instant_coverage_percentage,2))+"% ",
@@ -143,17 +144,18 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
             bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
 
     # PLOT AREA COVERAGE TEMPERATURE MAP
-    if Constants.COVERAGE_TEMPERATURE:
+    if Constants.COVERAGE_TEMPERATURE and Constants.PLOTS:
         image_cov_temp.set_data(np.rot90(total_coverage_map))
         # if iter%10==0 and Constants.MODE=="continuous":
         if Constants.MODE=="continuous":
             image_cov_temp.set_clim(Constants.OBSTACLE_VALUE,time.monotonic()-START_TIME)
 
     # Update canvas with new changes
-    fig.canvas.draw_idle()
-    plt.pause(0.01)
+    if Constants.PLOTS:
+        fig.canvas.draw_idle()
+        plt.pause(0.01)
 
-    if Constants.VIDEO:
+    if Constants.VIDEO and Constants.PLOTS:
         string = fig.canvas.tostring_argb() # Extract the image as an ARGB string
         video.stdin.write(string) # Write to pipe
 
@@ -161,8 +163,17 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     if Constants.MAX_ITERATIONS <= iter or Constants.MAX_COVERAGE <= swarm.coverage_percentage: 
         FINAL_CONDITION = False
 
-# Draw last sensor circle for final picture
-ax_trajectories.add_patch(Circle(swarm.pos[agent],Constants.R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
+
+# Draw canvas for final picture when real-time plots turned off
+if not Constants.PLOTS:
+    ax_cov_graph.plot(history_percentage, color="b")
+    ax_cov_graph.annotate(" "+str(round(swarm.coverage_percentage,2))+"% ", xy=(0.86,0.9), xycoords='axes fraction', size=14, bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
+    ax_inst_graph.plot(instant_coverage, color="b")
+    ax_inst_graph.annotate(" "+str(round(instant_coverage_percentage,2))+"% ", xy=(0.86,0.1), xycoords='axes fraction', size=14, bbox=dict(boxstyle="round", fc=(0.5, 0.8, 1.0), ec="none"))
+    image_cov_temp.set_data(np.rot90(total_coverage_map))
+    if Constants.MODE=="continuous":
+        image_cov_temp.set_clim(Constants.OBSTACLE_VALUE,time.monotonic()-START_TIME)
+    ax_trajectories.add_patch(Circle(swarm.pos[agent],Constants.R_S,edgecolor="cornflowerblue",fill=False,linestyle="--"))
 
 fig.savefig(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME), bbox_inches="tight")
 
@@ -171,15 +182,27 @@ if Constants.VIDEO:
     video.communicate()
 
 
+exec_time = str(round(time.monotonic()-START_TIME,2))
+total_iter = str(iter)
+total_cov_area = str(round(swarm.coverage_percentage,2))
+average_inst_cov_area = str(round(sum(instant_coverage)/len(instant_coverage),2))
+mission_time = str(iter*Constants.TIME_STEP)
+
 file = open(str(Constants.RESULTS_DIR+"/"+Constants.FILE_NAME), "w")
 file.write("\n")
 file.write(" ============ AREA COVERAGE MISSION COMPLETED ============ \n")
-file.write(str("       (Exec time: "+str(round(time.monotonic()-START_TIME,2))+" s)\n"))
-file.write(str("       Number of total iterations: " + str(iter)+"\n"))
-file.write(str("       Final coverage area: " + str(round(swarm.coverage_percentage,2))+"%\n"))
-file.write(str("       Average instantaneous coverage area: " + str(round(sum(instant_coverage)/len(instant_coverage),2))+"%\n"))
-file.write(str("       Mission time: " + str(iter*Constants.TIME_STEP)+" s\n"))
+file.write(str("       (Exec time: "+exec_time+" s)\n"))
+file.write(str("       Number of UAVs: "+str(Constants.NUM_UAVS)+"\n"))
+file.write(str("       Coverage Mode: "+str(Constants.MODE)+"\n"))
+file.write(str("       Always communication: "+str(Constants.ALWAYS_COMMUNICATION)+"\n"))
+file.write(str("       Number of total iterations: " + total_iter +"\n"))
+file.write(str("       Final coverage area: " + total_cov_area +"%\n"))
+file.write(str("       Average instantaneous coverage area: " + average_inst_cov_area +"%\n"))
+file.write(str("       Mission time: " + mission_time +" s\n"))
 file.write(" =========================================================\n")
 file.write("\n")
 file.close()
 time.sleep(1)
+
+
+print(f"{exec_time},{str(Constants.NUM_UAVS)},{str(Constants.MODE)},{str(Constants.ALWAYS_COMMUNICATION)},{total_iter},{total_cov_area},{average_inst_cov_area},{mission_time}")

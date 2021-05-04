@@ -1,11 +1,2 @@
 NEXT STEPS:
  - Faster simulation
- - Initialization positions of drones
-
-
-
-REPORT DUDAS:
- - Pseudocódigo algoritmo:
- 	· hacerlo más de tipo matemático (símbolos)
-	  o
-	· más de tipo programación (funciones, variables, etc.)
