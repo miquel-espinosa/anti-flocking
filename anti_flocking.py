@@ -19,8 +19,8 @@ arguments()
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
-obstacles = [obs1, obs2]
-# obstacles = []
+# obstacles = [obs1, obs2]
+obstacles = []
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0

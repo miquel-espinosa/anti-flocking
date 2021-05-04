@@ -10,7 +10,7 @@ echo "Starting script ..."
 mypath=$(pwd) # creo una variable mypath que contiene my root path desde el cual estoy ejecutando el script
 # echo "Estoy en el directorio $mypath" #así se ponen commandos con variables
 
-folder_num_uavs="simulation_num_uavs"
+folder_num_uavs="simulation_num_uavs_no_obstacles"
 radius_comm="radius_comm"
 always_comm="always_comm"
 

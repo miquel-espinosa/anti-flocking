@@ -1,0 +1,12 @@
+
+ ============ AREA COVERAGE MISSION COMPLETED ============ 
+       (Exec time: 17642.31 s)
+       Number of UAVs: 7
+       Coverage Mode: unique
+       Always communication: True
+       Number of total iterations: 100
+       Final coverage area: 95.16%
+       Average instantaneous coverage area: 19.21%
+       Mission time: 20.0 s
+ =========================================================
+
