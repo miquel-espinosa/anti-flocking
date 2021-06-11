@@ -270,6 +270,7 @@ def arguments():
     parser.add_argument('-d', action='store', help="Directory to store results")
     parser.add_argument('-f', action='store', help="File name for results")
     parser.add_argument('-m', action='store', help="Execution mode", choices=["unique","continuous"])
+    parser.add_argument('-c', action='store', type=int, help="Communication range")
     args = parser.parse_args()
     if args.noplot:
         Constants.PLOTS = False
@@ -279,6 +280,7 @@ def arguments():
     if args.d: Constants.RESULTS_DIR = args.d
     if args.f: Constants.FILE_NAME = args.f
     if args.m: Constants.MODE = args.m
+    if args.c: Constants.R_C = args.c
 
     if not os.path.exists(Constants.RESULTS_DIR):
         os.makedirs(Constants.RESULTS_DIR)
