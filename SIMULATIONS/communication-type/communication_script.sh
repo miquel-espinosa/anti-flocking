@@ -9,7 +9,7 @@ echo "Starting script ..."
 
 mypath=$(pwd) # variable mypath: root path desde el cual estoy ejecutando el script
 
-folder_num_uavs="simulation2_num_uavs"
+folder_num_uavs="communication_range"
 
 min_uav=3
 uav_step=3
@@ -41,7 +41,7 @@ do
 
             echo "Experiment: $u uavs | $c range | sample: $i"
 
-            # python3 ../../anti_flocking.py -d "$folder_num_uavs/results" -f $u"-uav-"$c"-range-"$i -n $u -m "unique" -c $c --noplot  >> $summary_file
+            python3 ../../anti_flocking.py -d "$folder_num_uavs/results" -f $u"-uav-"$c"-range-"$i -n $u -m "unique" -c $c --noplot  >> $summary_file
 
         done
     done
@@ -50,7 +50,7 @@ do
 
         echo "Experiment: $u uavs| always communication | sample $i"
 
-        # python3 ../../anti_flocking.py -d "$folder_num_uavs/results" -f $u"-uav-always-comme-"$i -n $u -m "unique" --noplot --alwayscomm >> $summary_file
+        python3 ../../anti_flocking.py -d "$folder_num_uavs/results" -f $u"-uav-alwayscomm-"$i -n $u -m "unique" --noplot --alwayscomm >> $summary_file
 
     done
 done
