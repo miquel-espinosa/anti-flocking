@@ -271,6 +271,7 @@ def arguments():
     parser.add_argument('-f', action='store', help="File name for results")
     parser.add_argument('-m', action='store', help="Execution mode", choices=["unique","continuous"])
     parser.add_argument('-c', action='store', type=int, help="Communication range")
+    parser.add_argument('-r', action='store', type=int, help="Max coverage ratio")
     args = parser.parse_args()
     if args.noplot:
         Constants.PLOTS = False
@@ -281,6 +282,7 @@ def arguments():
     if args.f: Constants.FILE_NAME = args.f
     if args.m: Constants.MODE = args.m
     if args.c: Constants.R_C = args.c
+    if args.r: Constants.MAX_COVERAGE = args.r
 
     if not os.path.exists(Constants.RESULTS_DIR):
         os.makedirs(Constants.RESULTS_DIR)

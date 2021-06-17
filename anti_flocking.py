@@ -19,8 +19,8 @@ arguments()
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
-# obstacles = [obs1, obs2]
-obstacles = []
+obstacles = [obs1, obs2]
+# obstacles = []
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
@@ -205,4 +205,4 @@ file.close()
 time.sleep(1)
 
 
-print(f"{exec_time},{str(Constants.NUM_UAVS)},{str(Constants.MODE)},{str(Constants.ALWAYS_COMMUNICATION)},{total_iter},{total_cov_area},{average_inst_cov_area},{mission_time}")
+print(f"{exec_time},{str(Constants.NUM_UAVS)},{str(Constants.MODE)},{str(Constants.ALWAYS_COMMUNICATION)},{total_iter},{total_cov_area},{average_inst_cov_area},{mission_time},{Constants.MAX_COVERAGE}")
