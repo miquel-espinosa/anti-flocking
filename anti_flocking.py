@@ -19,7 +19,37 @@ arguments()
 
 obs1 = Obstacle(ld=[10,10],ru=[18,17])
 obs2 = Obstacle(ld=[32,36],ru=[40,40])
-obstacles = [obs1, obs2]
+
+obs3 = Obstacle(ld=[37,6],ru=[43,43])
+obs4 = Obstacle(ld=[25,30],ru=[35,40])
+obs5 = Obstacle(ld=[7,20],ru=[15,40])
+
+o11 = Obstacle(ld=[10,40],ru=[12,42])
+o12 = Obstacle(ld=[20,40],ru=[22,42])
+o13 = Obstacle(ld=[30,40],ru=[32,42])
+o14 = Obstacle(ld=[40,40],ru=[42,42])
+
+o21 = Obstacle(ld=[12,30],ru=[14,32])
+o22 = Obstacle(ld=[22,30],ru=[24,32])
+o23 = Obstacle(ld=[32,30],ru=[34,32])
+o24 = Obstacle(ld=[42,30],ru=[44,32])
+
+o31 = Obstacle(ld=[10,20],ru=[12,22])
+o32 = Obstacle(ld=[20,20],ru=[22,22])
+o33 = Obstacle(ld=[30,20],ru=[32,22])
+o34 = Obstacle(ld=[40,20],ru=[42,22])
+
+o41 = Obstacle(ld=[12,10],ru=[14,12])
+o42 = Obstacle(ld=[22,10],ru=[24,12])
+o43 = Obstacle(ld=[32,10],ru=[34,12])
+o44 = Obstacle(ld=[42,10],ru=[44,12])
+
+# obstacles = [obs1, obs2]
+# obstacles = [obs3, obs4, obs5]
+obstacles = [o11,o12,o13,o14,
+             o21,o22,o23,o24,
+             o31,o32,o33,o34,
+             o41,o42,o43,o44]
 # obstacles = []
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
@@ -82,10 +112,15 @@ FINAL_CONDITION = True
 while FINAL_CONDITION: # 95% coverage or 400 max iterations = 
 
     if Constants.SIMULATE_FAILURES and Constants.NUM_UAVS > 1 and iter > 1:
-        # Kill UAV every 40 iterations
-        if iter%40==0:
+        # Kill UAV every 50 iterations
+        if iter==50:
+            # --------- Failures ------------
             Constants.NUM_UAVS = Constants.NUM_UAVS-1
-            ax_trajectories.scatter(*swarm.pos[Constants.NUM_UAVS],color='r',marker="x", zorder=2)
+            ax_trajectories.scatter(*swarm.pos[Constants.NUM_UAVS],color='r',marker="x", zorder=2, s=130, linewidth=3)
+        if iter==100:
+            # --------- New members ------------
+            Constants.NUM_UAVS = Constants.NUM_UAVS+1
+            ax_trajectories.scatter(*swarm.pos[Constants.NUM_UAVS-1],color='black',marker="o", zorder=2, s=60)
 
     iter = iter + 1 # Increment iteration counter
     swarm.neighbors = [[] for i in range(Constants.NUM_UAVS)] # Initialization of neighbors
