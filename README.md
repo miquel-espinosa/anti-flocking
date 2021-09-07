@@ -1,6 +1,11 @@
 # Self-awarness in a drone swarm for the complete coverage of its surroundings
-Distributed anti-flocking algorithm for complete coverage of a defined area
+A distributed anti-flocking algorithm for the complete coverage of a defined area
 
-Demo:
+## Bachelor's Thesis:
+Full PDF: [Self-awarness in a drone swarm](https://drive.google.com/file/d/1A_35Dyw4siyMmg9ASHMDx_kQeNBcnG2t/view?usp=sharing "Miquel Espinosa -  Bachelor's Thesis")
+
+
+
+## Demo:
 
 [![Self-awarness in a drone swarm for the complete coverage of its surroundings](https://yt-embed.herokuapp.com/embed?v=NZ7j5BNoies)](https://www.youtube.com/watch?v=NZ7j5BNoies "Self-awarness in a drone swarm for the complete coverage of its surroundings")
