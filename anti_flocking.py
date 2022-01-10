@@ -6,8 +6,9 @@ import time
 from constants import Constants
 from Swarm import Swarm
 from Obstacle import Obstacle
+from Target import Target
 from rules import arguments, agent_iteration, percentage_covered
-from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, assign_agent_colors, get_screen_dimensions
+from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, draw_targets, assign_agent_colors, get_screen_dimensions
 
 # Command line arguments processing
 # Files and directories creation
@@ -46,16 +47,21 @@ o44 = Obstacle(ld=[42,10],ru=[44,12])
 
 # obstacles = [obs1, obs2]
 # obstacles = [obs3, obs4, obs5]
-obstacles = [o11,o12,o13,o14,
-             o21,o22,o23,o24,
-             o31,o32,o33,o34,
-             o41,o42,o43,o44]
-# obstacles = []
+# obstacles = [o11,o12,o13,o14,
+#              o21,o22,o23,o24,
+#              o31,o32,o33,o34,
+#              o41,o42,o43,o44]
+obstacles = []
+tar1 = Target(x=10,y=10,r=10,color='red')
+tar2 = Target(x=20,y=20,r=10,color='red')
+tar3 = Target(x=30,y=30,r=10,color='red')
+tar4 = Target(x=40,y=40,r=10,color='red')
+targets = [tar1,tar2]
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
 
-swarm = Swarm(Constants.NUM_UAVS, obstacles)
+swarm = Swarm(Constants.NUM_UAVS, obstacles, targets)
 history_x = [[swarm.pos[i][0]] for i in range(Constants.NUM_UAVS)]
 history_y = [[swarm.pos[i][1]] for i in range(Constants.NUM_UAVS)]
 history_percentage = [0]
@@ -102,6 +108,7 @@ if Constants.INSTANTANEOUS_PERCENTAGE:
 
 
 draw_obstacles(obstacles,ax_trajectories)
+draw_targets(targets, ax_trajectories)
 agent_colors = assign_agent_colors()
 
 # Iteration counter
@@ -131,6 +138,12 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
 
         # Most important function
         agent_iteration(START_TIME,swarm,agent)
+
+        # Print info
+        print("AGENT: ",agent)
+        for i in swarm.targets[agent]:
+            print(i)
+        print("my target: ",swarm.my_target[agent])
 
         # ===================================================
         #                 PLOT GRAPH

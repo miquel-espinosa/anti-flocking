@@ -68,6 +68,11 @@ def draw_obstacles(obstacles, ax_trajectories):
         # Add the patch to the Axes
         if Constants.TRAJECTORY_PLOT: ax_trajectories.add_patch(rect)
 
+
+def draw_targets(targets, ax_trajectories):
+    for target in targets:
+        ax_trajectories.plot(target.x,target.y,'o',markersize=target.r,color=target.color)
+
 def assign_agent_colors():
     agent_colors = []
     for c in np.arange(0., 360., 360./Constants.NUM_UAVS):

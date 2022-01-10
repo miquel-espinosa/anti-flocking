@@ -47,13 +47,15 @@ class Constants(object):
 
     TIME_STEP = 0.2 # In seconds
     OBSTACLE_VALUE = -40   # Specific value for marking obstacles in coverage map
+    TARGET_VALUE = -5
+    UNASSIGNED_TARGET = -1
     
     
     # COVERAGE MODE
     #  + unique: Unique coverage (no time consideration) E.g. agricultural coverage only once
     #  + continuous: Surveillance coverage (time consideration) E.g. surveillance of an industrial compound
-    MODE = "unique"
-     
+    MODE = "continuous"
+
     
     # Minimum goal distance that must be ensured between agent goal and neighbor goal.
     # Again, this avoids both UAVs moving towards same uncovered areas.
@@ -95,7 +97,7 @@ class Constants(object):
 
     VIDEO = False                   # Will output a video of the simulation (needs ffmpeg installed)
     
-    CIRCLE_SENSOR = False            # Draw the Sensor Radius R_S circle in canvas
+    CIRCLE_SENSOR = True            # Draw the Sensor Radius R_S circle in canvas
     CIRCLE_COMMUNICATION = False    # Draw the Communication Radius R_C circle in canvas
 
 

@@ -1,3 +1,4 @@
+from os import close
 from constants import Constants
 import math
 import numpy as np
@@ -46,3 +47,13 @@ def outside_area(x,y):
         (x>Constants.LENGTH-Constants.GEO_FENCE_WIDTH) or (y>Constants.WIDTH-Constants.GEO_FENCE_WIDTH):
         return True
     return False
+
+def assign_target(agent_pos,targets):
+    closest_target = None
+    min_dist = 100000000
+    for target in targets:
+        dist = norm2([target.x,target.y],agent_pos)
+        if dist < min_dist and target.agent == Constants.UNASSIGNED_TARGET:
+            min_dist = dist
+            closest_target = target
+    return closest_target

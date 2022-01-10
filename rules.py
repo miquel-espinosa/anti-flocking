@@ -1,8 +1,9 @@
 import time, os, argparse
 import numpy as np
-import math
+import math, random
+from Target import Target
 
-from functions import s, norm2, unitary_vector, angle_between, outside_area
+from functions import s, norm2, unitary_vector, angle_between, outside_area, assign_target
 from constants import Constants
 
 
@@ -82,6 +83,37 @@ def decentering_velocity(swarm, agent):
             swarm.coverage_map[agent] = new
             swarm.coverage_map[neig] = new
 
+            # Sharing found targets
+            union = list(set().union(swarm.targets[agent],swarm.targets[neig]))
+            swarm.targets[agent] = union
+            swarm.targets[neig] = union
+
+            # Check if my target is empty or is not assigned to current agent (after union)
+            if (not swarm.my_target[agent]) or (swarm.my_target[agent].agent != agent):
+                swarm.my_target[agent] = assign_target(swarm.pos[agent],swarm.targets[agent])
+                if swarm.my_target[agent]: swarm.my_target[agent].agent = agent
+
+
+            # change = (swarm.my_target[agent] in swarm.occupied_targets[neig]) and \
+            #             (swarm.my_target[agent] not in swarm.occupied_targets[agent])
+
+            # # Sharing occupied targets
+            # union = list(set().union(swarm.occupied_targets[agent],swarm.occupied_targets[neig]))
+            # print("UNION:",union)
+            # swarm.occupied_targets[agent] = union
+            # swarm.occupied_targets[neig] = union
+
+            # If my target was already occupied, I choose a new target and mark it as occupied
+            # if swarm.my_target[agent] in swarm.occupied_targets[agent]:
+            # if change:
+            #     new_target = get_closest(swarm.pos[agent],list(set(swarm.targets[agent])-set(swarm.occupied_targets[agent])))
+            #     if new_target:
+            #         swarm.my_target[agent] = new_target
+            #         swarm.occupied_targets[agent].append(swarm.my_target[agent])
+            #         swarm.occupied_targets[neig].append(swarm.my_target[agent])
+            #     else:
+            #         swarm.my_target[agent] = Constants.UNASSIGNED_TARGET
+
         mean = mean/(num_neighbors+1)
 
         # Update Decentering velocity for current agent
@@ -121,6 +153,19 @@ def agent_iteration(START_TIME, swarm, agent):
             # If obstacles are inside D_0 radius, repulsion
             if swarm.coverage_map[agent][x][y] == Constants.OBSTACLE_VALUE: 
                 swarm.vel_obs[agent] += (s(dist_to_point,Constants.D_O) * unitary_vector(point,swarm.pos[agent]))
+
+            # ---------- UPDATE TARGET ----------
+            elif swarm.coverage_map[agent][x][y] == Constants.TARGET_VALUE:
+                new_target = Target(x,y)
+                # If not already in targets list
+                if new_target not in swarm.targets[agent]:
+                    swarm.targets[agent].append(new_target)
+                    if not swarm.my_target[agent]:
+                        new_target.agent = agent
+                        swarm.my_target[agent] = new_target
+                        # swarm.occupied_targets[agent].append(swarm.my_target[agent])
+
+                
                 
             # ---------- UPDATE COVERAGE MAP ----------
             # If inside not an obstacle and is inside the sensor range, update timestamp
@@ -135,44 +180,45 @@ def agent_iteration(START_TIME, swarm, agent):
             # We will perform target grid selection for those cells
             # that are:  R_S < cells < 2*R_S  
             elif (swarm.coverage_map[agent][x][y] != Constants.OBSTACLE_VALUE) and (not outside_area(x,y)):
+                
+                if not swarm.my_target[agent]:
+                    # Compute closest neighbor to this point
+                    closest = True
+                    for neig in swarm.neighbors[agent]:
+                        dist_to_neig = norm2(point,swarm.pos[neig])
+                        dist_to_neig_goal = norm2(point,swarm.goal[neig])
+                        # If a neighbor is closer than agent (to point x,y)
+                        # or if point is too close to neighbor goal --> skip point
+                        if dist_to_neig<dist_to_point or dist_to_neig_goal < Constants.MIN_GOAL_DIST:
+                            closest = False 
 
-                # Compute closest neighbor to this point
-                closest = True
-                for neig in swarm.neighbors[agent]:
-                    dist_to_neig = norm2(point,swarm.pos[neig])
-                    dist_to_neig_goal = norm2(point,swarm.goal[neig])
-                    # If a neighbor is closer than agent (to point x,y)
-                    # or if point is too close to neighbor goal --> skip point
-                    if dist_to_neig<dist_to_point or dist_to_neig_goal < Constants.MIN_GOAL_DIST:
-                        closest = False 
+                    if closest: # Compute fitness value for point
 
-                if closest: # Compute fitness value for point
-
-                    # ----------------- FITNESS FUNCTION CALCULATION -----------------
-                    # Fitness value: the higher, the more priority
-                    fitness = compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point)
-                    
-                    if fitness > max_fitness:
-                        max_fitness = fitness
-                        swarm.goal[agent] = point # Update goal with point (x,y)
-                        # Compute unitary velocity vector to goal
-                        vel_goal=unitary_vector(swarm.pos[agent],point)
-                        # Update best current angle to point to best current goal
-                        best_angle = angle_between(swarm.vel_actual[agent],vel_goal)
-
-                    # elif (fitness == max_fitness) and (fitness != 0):
-                    # elif fitness == max_fitness:
-                    elif abs(max_fitness-fitness)<0.005: # TODO: how to know this value
-                        # Compute unitary velocity vector to possible goal
-                        vel_goal=unitary_vector(swarm.pos[agent],point)
-                        # Compute angle between actual velocity and possible goal
-                        angle = angle_between(vel_goal,swarm.vel_actual[agent])
-
-                        # Compare angle with best_current_angle
-                        if angle < best_angle:
-                            best_angle = angle
+                        # ----------------- FITNESS FUNCTION CALCULATION -----------------
+                        # Fitness value: the higher, the more priority
+                        fitness = compute_fitness(swarm,agent,START_TIME,point,x,y,dist_to_point)
+                        
+                        if fitness > max_fitness:
                             max_fitness = fitness
                             swarm.goal[agent] = point # Update goal with point (x,y)
+                            # Compute unitary velocity vector to goal
+                            vel_goal=unitary_vector(swarm.pos[agent],point)
+                            # Update best current angle to point to best current goal
+                            best_angle = angle_between(swarm.vel_actual[agent],vel_goal)
+
+                        # elif (fitness == max_fitness) and (fitness != 0):
+                        # elif fitness == max_fitness:
+                        elif abs(max_fitness-fitness)<0.005: # TODO: how to know this value
+                            # Compute unitary velocity vector to possible goal
+                            vel_goal=unitary_vector(swarm.pos[agent],point)
+                            # Compute angle between actual velocity and possible goal
+                            angle = angle_between(vel_goal,swarm.vel_actual[agent])
+
+                            # Compare angle with best_current_angle
+                            if angle < best_angle:
+                                best_angle = angle
+                                max_fitness = fitness
+                                swarm.goal[agent] = point # Update goal with point (x,y)
                     
                     
 
@@ -186,6 +232,11 @@ def agent_iteration(START_TIME, swarm, agent):
     #                 SELFISHNESS TERM
     # ===================================================
     # Compute selfishness term with goal previously computed
+    
+    # If we have a target, assign target to goal
+    if swarm.my_target[agent]:
+        swarm.goal[agent] = [swarm.my_target[agent].x, swarm.my_target[agent].y]
+
     swarm.vel_sel[agent]=unitary_vector(swarm.pos[agent],swarm.goal[agent])
 
     # ===================================================

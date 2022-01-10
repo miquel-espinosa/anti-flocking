@@ -12,7 +12,7 @@ class Swarm(object):
             num: number of agents to initialize Swarm
             obstacles: obstacle object to include in coverage initial map
     """
-    def __init__(self, num, obstacles):
+    def __init__(self, num, obstacles, targets):
         
         # φ: Heading angle of UAVS
         self.heading_angle, self.pos = self.init_positions(num)
@@ -24,7 +24,7 @@ class Swarm(object):
         self.diff_angle = np.zeros(num)
 
         # Coverage map
-        self.coverage_map = self.init_coverage_map(num, obstacles)
+        self.coverage_map = self.init_coverage_map(num, obstacles, targets)
         
         # Actual velocity direction term
         self.vel_actual = np.zeros((num,2))
@@ -59,12 +59,26 @@ class Swarm(object):
         # Instantaneous coverage map
         self.instantaneous_coverage_map = np.zeros((Constants.WIDTH, Constants.LENGTH))
 
+        # Targets points available
+        self.targets = [[] for _ in range(num)]
+
+        # # Occupied targets
+        # self.occupied_targets = [[] for _ in range(num)]
+
+        # My target (self-assigned)
+        self.my_target = [None for _ in range(num)]
+
+
     # Mark with -1 all cells with obstacle inside
-    def init_coverage_map(self, num_uavs, obstacles):
+    def init_coverage_map(self, num_uavs, obstacles, targets):
         cov_map = np.zeros((Constants.WIDTH,Constants.LENGTH)) 
         for obs in obstacles:
             for row in range(obs.ld[0],obs.ru[0]):
                 cov_map[row][obs.ld[1]:obs.ru[1]] = Constants.OBSTACLE_VALUE
+
+        for target in targets:
+            cov_map[target.x][target.y] = Constants.TARGET_VALUE
+        
         return np.array([cov_map]*num_uavs)
 
     def init_positions(self, num):
