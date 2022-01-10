@@ -45,9 +45,10 @@ class Constants(object):
     #               SIMULATION PARAMETERS (Coverage mode, optimizations, failure simulations...)
     # =======================================================================================================
 
+    ACTIVE_UAVS = list(range(NUM_UAVS))
     TIME_STEP = 0.2 # In seconds
     OBSTACLE_VALUE = -40   # Specific value for marking obstacles in coverage map
-    TARGET_VALUE = -5
+    TARGET_VALUE = -10
     UNASSIGNED_TARGET = -1
     
     
@@ -97,7 +98,7 @@ class Constants(object):
 
     VIDEO = False                   # Will output a video of the simulation (needs ffmpeg installed)
     
-    CIRCLE_SENSOR = True            # Draw the Sensor Radius R_S circle in canvas
+    CIRCLE_SENSOR = False            # Draw the Sensor Radius R_S circle in canvas
     CIRCLE_COMMUNICATION = False    # Draw the Communication Radius R_C circle in canvas
 
 
@@ -107,10 +108,10 @@ class Constants(object):
 
     # --> Only one must be enabled at the same time
     INIT_CIRCUMFERENCE = False     # UAVs circle init at center
-    INIT_RANDOM = True            # UAVs random init at center
+    INIT_RANDOM = False            # UAVs random init at center
     INIT_LINE_UP = False           # UAVs init with upwards pointing line formation
     INIT_LINE_DOWN = False          # UAVs init with downwards pointing line formation
-    INIT_LINE_INTERCHANGED = False # UAVs init with interchanged line formation
+    INIT_LINE_INTERCHANGED = True # UAVs init with interchanged line formation
     
     # TODO: Not working
     INIT_CORNER = False             # UAVs init in left corner with random pos around R_S

@@ -9,6 +9,7 @@ from Obstacle import Obstacle
 from Target import Target
 from rules import arguments, agent_iteration, percentage_covered
 from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, draw_targets, assign_agent_colors, get_screen_dimensions
+from functions import norm2
 
 # Command line arguments processing
 # Files and directories creation
@@ -45,18 +46,26 @@ o42 = Obstacle(ld=[22,10],ru=[24,12])
 o43 = Obstacle(ld=[32,10],ru=[34,12])
 o44 = Obstacle(ld=[42,10],ru=[44,12])
 
-# obstacles = [obs1, obs2]
+obstacles = [obs1, obs2]
 # obstacles = [obs3, obs4, obs5]
 # obstacles = [o11,o12,o13,o14,
 #              o21,o22,o23,o24,
 #              o31,o32,o33,o34,
 #              o41,o42,o43,o44]
-obstacles = []
-tar1 = Target(x=10,y=10,r=10,color='red')
-tar2 = Target(x=20,y=20,r=10,color='red')
-tar3 = Target(x=30,y=30,r=10,color='red')
-tar4 = Target(x=40,y=40,r=10,color='red')
-targets = [tar1,tar2]
+# obstacles = []
+tar1 = Target(5,8)
+tar2 = Target(7,20)
+tar3 = Target(30,47)
+tar4 = Target(39,45)
+
+
+tar11 = Target(27,20)
+tar12 = Target(28,20)
+tar13 = Target(25,19)
+tar14 = Target(26,20)
+
+# targets = [tar1, tar2, tar4, tar3]
+targets = [tar11, tar12, tar13, tar14]
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
@@ -115,6 +124,8 @@ agent_colors = assign_agent_colors()
 iter = 0
 FINAL_CONDITION = True
 
+Constants.ACTIVE_UAVS = list(range(Constants.NUM_UAVS))
+
 # MAIN EXECUTION LOOP
 while FINAL_CONDITION: # 95% coverage or 400 max iterations = 
 
@@ -134,16 +145,23 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
     swarm.instantaneous_coverage_map = np.zeros((Constants.WIDTH, Constants.LENGTH)) # Initialize instantaneous coverage map
 
     # MAIN LOOP 2
-    for agent in range(Constants.NUM_UAVS):
+    for agent in Constants.ACTIVE_UAVS:
 
         # Most important function
         agent_iteration(START_TIME,swarm,agent)
 
-        # Print info
-        print("AGENT: ",agent)
-        for i in swarm.targets[agent]:
-            print(i)
-        print("my target: ",swarm.my_target[agent])
+        if swarm.my_target[agent]:
+            my_target_coord = np.array([swarm.my_target[agent].x, swarm.my_target[agent].y])
+            if norm2(my_target_coord, swarm.pos[agent]) < 0.5:
+                ax_trajectories.scatter(*swarm.pos[agent],color='k',marker="x", zorder=5, s=130, linewidth=3)
+                Constants.ACTIVE_UAVS.remove(agent)
+        
+        if not Constants.ACTIVE_UAVS: FINAL_CONDITION = False
+        
+        # print("AGENT: ",agent)
+        # for i in swarm.targets[agent]:
+        #     print(i)
+        # print("my target: ",swarm.my_target[agent])
 
         # ===================================================
         #                 PLOT GRAPH

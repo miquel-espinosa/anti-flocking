@@ -25,7 +25,7 @@ def get_neighbors(agent,swarm):
     # Compute neighbors for each uav
     for agent2 in range(agent+1,Constants.NUM_UAVS):
         inter_dist = norm2(swarm.pos[agent],swarm.pos[agent2])
-        if inter_dist<Constants.R_C:
+        if inter_dist<Constants.R_C and agent2 in Constants.ACTIVE_UAVS:
             swarm.neighbors[agent].append(agent2)
             swarm.neighbors[agent2].append(agent)
 
@@ -69,7 +69,7 @@ def decentering_velocity(swarm, agent):
        + Share local coverage map with neighbors
     """
     if Constants.ALWAYS_COMMUNICATION:
-        swarm.neighbors[agent] = list(range(Constants.NUM_UAVS))
+        swarm.neighbors[agent] = Constants.ACTIVE_UAVS
     num_neighbors = len(swarm.neighbors[agent])
     
     if num_neighbors > 0:
@@ -89,30 +89,10 @@ def decentering_velocity(swarm, agent):
             swarm.targets[neig] = union
 
             # Check if my target is empty or is not assigned to current agent (after union)
+            possible_new_target = assign_target(swarm.pos[agent],swarm.targets[agent])
             if (not swarm.my_target[agent]) or (swarm.my_target[agent].agent != agent):
-                swarm.my_target[agent] = assign_target(swarm.pos[agent],swarm.targets[agent])
+                swarm.my_target[agent] = possible_new_target
                 if swarm.my_target[agent]: swarm.my_target[agent].agent = agent
-
-
-            # change = (swarm.my_target[agent] in swarm.occupied_targets[neig]) and \
-            #             (swarm.my_target[agent] not in swarm.occupied_targets[agent])
-
-            # # Sharing occupied targets
-            # union = list(set().union(swarm.occupied_targets[agent],swarm.occupied_targets[neig]))
-            # print("UNION:",union)
-            # swarm.occupied_targets[agent] = union
-            # swarm.occupied_targets[neig] = union
-
-            # If my target was already occupied, I choose a new target and mark it as occupied
-            # if swarm.my_target[agent] in swarm.occupied_targets[agent]:
-            # if change:
-            #     new_target = get_closest(swarm.pos[agent],list(set(swarm.targets[agent])-set(swarm.occupied_targets[agent])))
-            #     if new_target:
-            #         swarm.my_target[agent] = new_target
-            #         swarm.occupied_targets[agent].append(swarm.my_target[agent])
-            #         swarm.occupied_targets[neig].append(swarm.my_target[agent])
-            #     else:
-            #         swarm.my_target[agent] = Constants.UNASSIGNED_TARGET
 
         mean = mean/(num_neighbors+1)
 
@@ -160,10 +140,6 @@ def agent_iteration(START_TIME, swarm, agent):
                 # If not already in targets list
                 if new_target not in swarm.targets[agent]:
                     swarm.targets[agent].append(new_target)
-                    if not swarm.my_target[agent]:
-                        new_target.agent = agent
-                        swarm.my_target[agent] = new_target
-                        # swarm.occupied_targets[agent].append(swarm.my_target[agent])
 
                 
                 
