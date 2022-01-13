@@ -150,6 +150,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
         # Most important function
         agent_iteration(START_TIME,swarm,agent)
 
+        # Check if agent has finally reached the target. If so, remove agent from active agents.
         if swarm.my_target[agent]:
             my_target_coord = np.array([swarm.my_target[agent].x, swarm.my_target[agent].y])
             if norm2(my_target_coord, swarm.pos[agent]) < 0.5:
