@@ -80,8 +80,8 @@ def decentering_velocity(swarm, agent):
 
             # Sharing of coverage maps between neighbors
             new = np.maximum(swarm.coverage_map[agent],swarm.coverage_map[neig])
-            swarm.coverage_map[agent] = new
-            swarm.coverage_map[neig] = new
+            swarm.coverage_map[agent] = copy.deepcopy(new)
+            swarm.coverage_map[neig] = copy.deepcopy(new)
 
             # Sharing found targets
             union = list(set().union(swarm.targets[agent],swarm.targets[neig]))
@@ -155,7 +155,9 @@ def agent_iteration(START_TIME, swarm, agent):
             # If not an obstacle and not inside radius, compute heuristics
             # We will perform target grid selection for those cells
             # that are:  R_S < cells < 2*R_S  
-            elif (swarm.coverage_map[agent][x][y] != Constants.OBSTACLE_VALUE) and (not outside_area(x,y)):
+            elif (swarm.coverage_map[agent][x][y] != Constants.OBSTACLE_VALUE) and \
+                 (swarm.coverage_map[agent][x][y] != Constants.TARGET_VALUE) and \
+                 (not outside_area(x,y)):
                 
                 if not swarm.my_target[agent]:
                     # Compute closest neighbor to this point
