@@ -1,6 +1,6 @@
 import time, os, argparse
 import numpy as np
-import math, random
+import math, random, copy
 from Target import Target
 
 from functions import s, norm2, unitary_vector, angle_between, outside_area, assign_target
@@ -85,14 +85,8 @@ def decentering_velocity(swarm, agent):
 
             # Sharing found targets
             union = list(set().union(swarm.targets[agent],swarm.targets[neig]))
-            swarm.targets[agent] = union
-            swarm.targets[neig] = union
-
-            # Check if my target is empty or is not assigned to current agent (after union)
-            possible_new_target = assign_target(swarm.pos[agent],swarm.targets[agent])
-            if (not swarm.my_target[agent]) or (swarm.my_target[agent].agent != agent):
-                swarm.my_target[agent] = possible_new_target
-                if swarm.my_target[agent]: swarm.my_target[agent].agent = agent
+            swarm.targets[agent] = copy.deepcopy(union)
+            swarm.targets[neig] = copy.deepcopy(union)
 
         mean = mean/(num_neighbors+1)
 
@@ -100,6 +94,12 @@ def decentering_velocity(swarm, agent):
         swarm.vel_dec[agent]=s(norm2(mean,swarm.pos[agent]),Constants.D_C)*unitary_vector(mean,swarm.pos[agent])
     else:
         swarm.vel_dec[agent]= np.zeros((2))
+    
+    # Check if my target is empty or is not assigned to current agent (after union)
+    possible_new_target = assign_target(swarm.pos[agent],swarm.targets[agent])
+    if (not swarm.my_target[agent]) or (swarm.my_target[agent].agent != agent):
+        swarm.my_target[agent] = possible_new_target
+        if swarm.my_target[agent]: swarm.my_target[agent].agent = agent
 
 
 def agent_iteration(START_TIME, swarm, agent):
@@ -135,7 +135,7 @@ def agent_iteration(START_TIME, swarm, agent):
                 swarm.vel_obs[agent] += (s(dist_to_point,Constants.D_O) * unitary_vector(point,swarm.pos[agent]))
 
             # ---------- UPDATE TARGET ----------
-            elif swarm.coverage_map[agent][x][y] == Constants.TARGET_VALUE:
+            elif swarm.coverage_map[agent][x][y] == Constants.TARGET_VALUE and dist_to_point < Constants.R_S:
                 new_target = Target(x,y)
                 # If not already in targets list
                 if new_target not in swarm.targets[agent]:

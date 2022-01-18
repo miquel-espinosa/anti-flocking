@@ -12,8 +12,8 @@ class Constants(object):
     NUM_UAVS = 2        # Num of total UAVs
     CONSTANT_VELOCITY = 3 # In meters per second
     W_MAX = 45      # Max heading angle change in degrees
-    R_C = 15    # Communication range 
-    R_S = 5     # Sensor-perception range
+    R_C = 5    # Communication range 
+    R_S = 2     # Sensor-perception range
 
     # ----------- WEIGHTS for velocity parameters ------------
     K_O= 0.8    # Obstacle and neighbor avoidance
@@ -98,8 +98,8 @@ class Constants(object):
 
     VIDEO = False                   # Will output a video of the simulation (needs ffmpeg installed)
     
-    CIRCLE_SENSOR = False            # Draw the Sensor Radius R_S circle in canvas
-    CIRCLE_COMMUNICATION = False    # Draw the Communication Radius R_C circle in canvas
+    CIRCLE_SENSOR = True            # Draw the Sensor Radius R_S circle in canvas
+    CIRCLE_COMMUNICATION = True    # Draw the Communication Radius R_C circle in canvas
 
 
     # =======================================================================================================
