@@ -12,8 +12,8 @@ class Constants(object):
     NUM_UAVS = 2        # Num of total UAVs
     CONSTANT_VELOCITY = 3 # In meters per second
     W_MAX = 45      # Max heading angle change in degrees
-    R_C = 5    # Communication range 
-    R_S = 2     # Sensor-perception range
+    R_C = 20    # Communication range 
+    R_S = 5     # Sensor-perception range
 
     # ----------- WEIGHTS for velocity parameters ------------
     K_O= 0.8    # Obstacle and neighbor avoidance

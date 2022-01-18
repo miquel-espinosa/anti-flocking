@@ -61,8 +61,8 @@ tar4 = Target(39,45)
 
 tar11 = Target(7,40)
 tar12 = Target(8,40)
-tar13 = Target(35,19)
-tar14 = Target(36,20)
+tar13 = Target(33,28)
+tar14 = Target(36,28)
 
 # targets = [tar1, tar2, tar4, tar3]
 targets = [tar11, tar12, tar13, tar14]
@@ -163,6 +163,7 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
         for i in swarm.targets[agent]:
             print(i)
         print("my target: ",swarm.my_target[agent])
+        print()
 
         # ===================================================
         #                 PLOT GRAPH

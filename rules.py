@@ -71,6 +71,14 @@ def decentering_velocity(swarm, agent):
     if Constants.ALWAYS_COMMUNICATION:
         swarm.neighbors[agent] = Constants.ACTIVE_UAVS
     num_neighbors = len(swarm.neighbors[agent])
+
+    # Before sharing the targets, assign target to myself if I don't already have one
+    if not swarm.my_target[agent] and swarm.targets[agent]:
+        swarm.my_target[agent] = assign_target(swarm.pos[agent],swarm.targets[agent])
+        if swarm.my_target[agent]:
+            for i in swarm.targets[agent]:
+                if i == swarm.my_target[agent]: i.agent = agent
+
     
     if num_neighbors > 0:
         mean = np.array(swarm.pos[agent])
@@ -99,7 +107,10 @@ def decentering_velocity(swarm, agent):
     possible_new_target = assign_target(swarm.pos[agent],swarm.targets[agent])
     if (not swarm.my_target[agent]) or (swarm.my_target[agent].agent != agent):
         swarm.my_target[agent] = possible_new_target
-        if swarm.my_target[agent]: swarm.my_target[agent].agent = agent
+        if swarm.my_target[agent]: 
+            swarm.my_target[agent].agent = agent
+            for i in swarm.targets[agent]:
+                if i == swarm.my_target[agent]: i.agent = agent
 
 
 def agent_iteration(START_TIME, swarm, agent):
