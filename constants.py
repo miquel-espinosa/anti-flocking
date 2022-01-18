@@ -12,7 +12,7 @@ class Constants(object):
     NUM_UAVS = 2        # Num of total UAVs
     CONSTANT_VELOCITY = 3 # In meters per second
     W_MAX = 45      # Max heading angle change in degrees
-    R_C = 20    # Communication range 
+    R_C = 15    # Communication range 
     R_S = 5     # Sensor-perception range
 
     # ----------- WEIGHTS for velocity parameters ------------
@@ -96,7 +96,7 @@ class Constants(object):
     COVERAGE_FIRST = False  # True: Plots the coverage map only for the first UAV (red trajectory)
                             # False: Plots global temperature map
 
-    VIDEO = False                   # Will output a video of the simulation (needs ffmpeg installed)
+    VIDEO = True                   # Will output a video of the simulation (needs ffmpeg installed)
     
     CIRCLE_SENSOR = True            # Draw the Sensor Radius R_S circle in canvas
     CIRCLE_COMMUNICATION = True    # Draw the Communication Radius R_C circle in canvas

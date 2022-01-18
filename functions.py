@@ -57,3 +57,7 @@ def assign_target(agent_pos,targets):
             min_dist = dist
             closest_target = target
     return closest_target
+
+def delete_target_from_swarm(swarm, target):
+    for cov_map in swarm.coverage_map:
+        cov_map[target.x][target.y] = 0

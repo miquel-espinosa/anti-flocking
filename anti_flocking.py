@@ -9,7 +9,7 @@ from Obstacle import Obstacle
 from Target import Target
 from rules import arguments, agent_iteration, percentage_covered
 from plot import add_video, trajectory_patch, plot_coverage_temperature, plot_simulation_map, draw_obstacles, draw_targets, assign_agent_colors, get_screen_dimensions
-from functions import norm2
+from functions import delete_target_from_swarm, norm2
 
 # Command line arguments processing
 # Files and directories creation
@@ -59,13 +59,13 @@ tar3 = Target(30,47)
 tar4 = Target(39,45)
 
 
-tar11 = Target(7,40)
-tar12 = Target(8,40)
+# tar11 = Target(7,40)
+# tar12 = Target(8,40)
 tar13 = Target(33,28)
 tar14 = Target(36,28)
 
 # targets = [tar1, tar2, tar4, tar3]
-targets = [tar11, tar12, tar13, tar14]
+targets = [tar13, tar14]
 
 if Constants.MODE=="continuous": START_TIME = time.monotonic()
 if Constants.MODE=="unique": START_TIME = 0
@@ -156,15 +156,10 @@ while FINAL_CONDITION: # 95% coverage or 400 max iterations =
             if norm2(my_target_coord, swarm.pos[agent]) < 0.5:
                 ax_trajectories.scatter(*swarm.pos[agent],color='k',marker="x", zorder=5, s=130, linewidth=3)
                 Constants.ACTIVE_UAVS.remove(agent)
+                delete_target_from_swarm(swarm, swarm.my_target[agent])
         
         if not Constants.ACTIVE_UAVS: FINAL_CONDITION = False
         
-        print("AGENT: ",agent)
-        for i in swarm.targets[agent]:
-            print(i)
-        print("my target: ",swarm.my_target[agent])
-        print()
-
         # ===================================================
         #                 PLOT GRAPH
         # ===================================================
